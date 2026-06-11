@@ -1,0 +1,246 @@
+import { useState, useRef } from 'react';
+import { X, Rss, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { fetchFeedMeta, detectFeedUrl } from '@/services/rssService';
+import { fetchArticles } from '@/services/rssService';
+import type { Feed } from '@/types';
+
+interface AddFeedDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+type Step = 'input' | 'detecting' | 'confirm' | 'loading' | 'success' | 'error';
+
+export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
+  const [url, setUrl] = useState('');
+  const [step, setStep] = useState<Step>('input');
+  const [detectedFeeds, setDetectedFeeds] = useState<string[]>([]);
+  const [feedPreview, setFeedPreview] = useState<Partial<Feed> | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { folders, addSubscription } = useSubscriptionStore();
+
+  const handleDetect = async () => {
+    if (!url.trim()) return;
+    setStep('detecting');
+
+    const trimmed = url.trim();
+    const isDirectFeed = trimmed.endsWith('.xml') || trimmed.endsWith('.rss') || trimmed.includes('/feed') || trimmed.includes('/rss');
+
+    if (isDirectFeed) {
+      await handleAddDirect(trimmed);
+    } else {
+      try {
+        const feeds = await detectFeedUrl(trimmed);
+        if (feeds.length > 0) {
+          setDetectedFeeds(feeds);
+          setStep('confirm');
+        } else {
+          await handleAddDirect(trimmed);
+        }
+      } catch {
+        setErrorMsg('无法检测到 RSS 源，请检查 URL');
+        setStep('error');
+      }
+    }
+  };
+
+  const handleAddDirect = async (feedUrl: string) => {
+    setStep('loading');
+    try {
+      const meta = await fetchFeedMeta(feedUrl);
+      setFeedPreview(meta);
+      const feed: Feed = {
+        id: meta.id || crypto.randomUUID(),
+        url: feedUrl,
+        title: meta.title || feedUrl,
+        description: meta.description || '',
+        link: meta.link || feedUrl,
+        imageUrl: meta.imageUrl || '',
+        lastFetchedAt: Date.now(),
+        errorCount: 0,
+        isActive: true,
+      };
+      await addSubscription(feed, selectedFolderId);
+
+      // Fetch initial articles
+      await fetchArticles(feedUrl, feed.id);
+
+      setStep('success');
+      setTimeout(() => {
+        handleClose();
+      }, 1200);
+    } catch (err) {
+      setErrorMsg(`添加失败：${err instanceof Error ? err.message : '未知错误'}`);
+      setStep('error');
+    }
+  };
+
+  const handleSelectDetected = (feedUrl: string) => {
+    handleAddDirect(feedUrl);
+  };
+
+  const handleClose = () => {
+    setUrl('');
+    setStep('input');
+    setDetectedFeeds([]);
+    setFeedPreview(null);
+    setErrorMsg('');
+    onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && step === 'input') {
+      handleDetect();
+    }
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in"
+        onClick={handleClose}
+      />
+
+      {/* Dialog */}
+      <div className="relative card-mac w-full max-w-md mx-4 p-0 animate-scale-in overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-black/5 dark:border-white/5">
+          <h2 className="text-base font-semibold">添加 RSS 订阅</h2>
+          <button
+            onClick={handleClose}
+            className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5">
+          {/* URL Input */}
+          {(step === 'input' || step === 'detecting') && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                订阅源地址
+              </label>
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="输入网站 URL 或 RSS 链接..."
+                  className="input-mac flex-1"
+                  autoFocus
+                  disabled={step === 'detecting'}
+                />
+                <button
+                  onClick={handleDetect}
+                  disabled={!url.trim() || step === 'detecting'}
+                  className="btn-mac-primary shrink-0"
+                >
+                  {step === 'detecting' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    '添加'
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary mt-2">
+                支持直接输入 RSS/Atom 链接，或输入网站地址自动检测
+              </p>
+            </div>
+          )}
+
+          {/* Detected feeds */}
+          {step === 'confirm' && detectedFeeds.length > 0 && (
+            <div>
+              <p className="text-sm mb-3">检测到以下 RSS 源：</p>
+              <div className="space-y-2">
+                {detectedFeeds.map((feedUrl) => (
+                  <button
+                    key={feedUrl}
+                    onClick={() => handleSelectDetected(feedUrl)}
+                    className="w-full text-left px-3 py-2.5 rounded-lg border border-black/10 dark:border-white/10 hover:bg-mac-blue/5 hover:border-mac-blue/30 transition-all group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Rss className="w-4 h-4 text-mac-blue shrink-0" />
+                      <span className="text-sm truncate group-hover:text-mac-blue transition-colors">
+                        {feedUrl}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Loading */}
+          {step === 'loading' && (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="w-8 h-8 text-mac-blue animate-spin mb-3" />
+              <p className="text-sm">正在获取订阅源信息...</p>
+            </div>
+          )}
+
+          {/* Success */}
+          {step === 'success' && feedPreview && (
+            <div className="flex flex-col items-center py-8">
+              <CheckCircle2 className="w-8 h-8 text-mac-green mb-3" />
+              <p className="text-sm font-medium">订阅成功</p>
+              <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary mt-1">
+                {feedPreview.title}
+              </p>
+            </div>
+          )}
+
+          {/* Error */}
+          {step === 'error' && (
+            <div className="flex flex-col items-center py-6">
+              <AlertCircle className="w-8 h-8 text-mac-red mb-3" />
+              <p className="text-sm font-medium">添加失败</p>
+              <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary mt-1 text-center">
+                {errorMsg}
+              </p>
+              <button
+                onClick={() => setStep('input')}
+                className="btn-mac-ghost mt-3 text-xs"
+              >
+                重试
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Folder selector */}
+        {step === 'input' && folders.length > 0 && (
+          <div className="px-5 pb-5">
+            <label className="text-sm font-medium mb-2 block">选择文件夹（可选）</label>
+            <select
+              value={selectedFolderId || ''}
+              onChange={(e) => setSelectedFolderId(e.target.value || undefined)}
+              className="input-mac"
+            >
+              <option value="">无文件夹</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

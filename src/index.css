@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply m-0 min-h-screen overflow-hidden;
+    font-family: "PingFang SC", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  ::selection {
+    @apply bg-mac-blue/20 text-mac-text dark:text-mac-text-dark;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-mac-text-secondary/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-mac-text-secondary/40;
+  }
+}
+
+@layer components {
+  .glass-sidebar {
+    @apply backdrop-blur-xl bg-mac-sidebar dark:bg-mac-sidebar-dark border-r border-black/5 dark:border-white/5;
+  }
+
+  .glass-toolbar {
+    @apply backdrop-blur-xl bg-mac-sidebar dark:bg-mac-sidebar-dark border-b border-black/5 dark:border-white/5;
+  }
+
+  .card-mac {
+    @apply rounded-xl bg-mac-card dark:bg-mac-card-dark shadow-sm border border-black/5 dark:border-white/5;
+  }
+
+  .btn-mac {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200
+           active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-mac-primary {
+    @apply btn-mac bg-mac-blue text-white hover:bg-mac-blue-dark shadow-sm;
+  }
+
+  .btn-mac-ghost {
+    @apply btn-mac text-mac-text dark:text-mac-text-dark hover:bg-black/5 dark:hover:bg-white/10;
+  }
+
+  .input-mac {
+    @apply w-full rounded-lg border border-black/10 dark:border-white/10 bg-white/50 dark:bg-white/5
+           px-3 py-2 text-sm text-mac-text dark:text-mac-text-dark
+           placeholder:text-mac-text-secondary dark:placeholder:text-mac-text-dark-secondary
+           focus:outline-none focus:ring-2 focus:ring-mac-blue/30 focus:border-mac-blue
+           transition-all duration-200;
+  }
+
+  .article-content h1 { @apply text-2xl font-bold mt-8 mb-4; }
+  .article-content h2 { @apply text-xl font-semibold mt-6 mb-3; }
+  .article-content h3 { @apply text-lg font-semibold mt-5 mb-2; }
+  .article-content p { @apply my-3 leading-relaxed; }
+  .article-content a { @apply text-mac-blue hover:underline; }
+  .article-content ul, .article-content ol { @apply my-3 pl-6; }
+  .article-content ul { @apply list-disc; }
+  .article-content ol { @apply list-decimal; }
+  .article-content blockquote { @apply border-l-4 border-mac-blue/30 pl-4 my-4 text-mac-text-secondary dark:text-mac-text-dark-secondary italic; }
+  .article-content pre { @apply rounded-xl bg-gray-900 dark:bg-black/50 p-4 my-4 overflow-x-auto; }
+  .article-content code { @apply font-mono text-sm; }
+  .article-content :not(pre) > code { @apply bg-black/5 dark:bg-white/10 rounded-md px-1.5 py-0.5 text-sm; }
+  .article-content img { @apply rounded-xl my-4 max-w-full cursor-zoom-in; }
+  .article-content figure { @apply my-4; }
+  .article-content figcaption { @apply text-center text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary mt-2; }
+}
+
+/* Bionic Reading mode */
+.bionic-reading b {
+  font-weight: 700;
+  color: inherit;
+}
+
+/* Prism.js theme overrides */
+pre[class*="language-"] {
+  @apply rounded-xl !bg-gray-900 dark:!bg-black/50;
+}
+
+/* ========================================
+   Eye-Care Mode (护眼模式)
+   Warm sepia tone for reduced eye strain
+   ======================================== */
+.eye-care {
+  --eye-care-bg: #F5E6C8;
+  --eye-care-bg-card: #FAF0DC;
+  --eye-care-text: #433422;
+  --eye-care-text-secondary: #7A6652;
+  --eye-care-border: rgba(67, 52, 34, 0.1);
+  --eye-care-accent: #B8860B;
+
+  background-color: var(--eye-care-bg) !important;
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care .glass-sidebar,
+.eye-care .glass-toolbar {
+  background-color: rgba(250, 240, 220, 0.85) !important;
+  border-color: var(--eye-care-border) !important;
+}
+
+.eye-care .card-mac {
+  background-color: var(--eye-care-bg-card) !important;
+  border-color: var(--eye-care-border) !important;
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care body,
+.eye-care {
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care .text-mac-text { color: var(--eye-care-text) !important; }
+.eye-care .text-mac-text-secondary { color: var(--eye-care-text-secondary) !important; }
+.eye-care .bg-mac-bg { background-color: var(--eye-care-bg) !important; }
+.eye-care .bg-mac-card { background-color: var(--eye-care-bg-card) !important; }
+
+.eye-care .border-black\/5 { border-color: var(--eye-care-border) !important; }
+
+/* Eye care mode - article content */
+.eye-care .article-content h1,
+.eye-care .article-content h2,
+.eye-care .article-content h3 {
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care .article-content p {
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care .article-content a {
+  color: var(--eye-care-accent) !important;
+}
+
+.eye-care .article-content blockquote {
+  border-left-color: var(--eye-care-accent) !important;
+  color: var(--eye-care-text-secondary) !important;
+}
+
+.eye-care .input-mac {
+  background-color: var(--eye-care-bg-card) !important;
+  color: var(--eye-care-text) !important;
+  border-color: var(--eye-care-border) !important;
+}
+
+.eye-care .btn-mac-ghost {
+  color: var(--eye-care-text) !important;
+}
+
+.eye-care ::-webkit-scrollbar-thumb {
+  background: var(--eye-care-text-secondary);
+  opacity: 0.2;
+}
