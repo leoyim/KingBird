@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, AlertTriangle, FolderOpen, Tags, Plus } from 'lucide-react';
+import { X, Loader2, AlertTriangle, FolderOpen, Tags, Plus, Clock } from 'lucide-react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useTagStore } from '@/stores/tagStore';
 import type { Feed } from '@/types';
@@ -19,6 +19,7 @@ export function EditFeedDialog({ open, feedId, onClose }: EditFeedDialogProps) {
 
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [newTagName, setNewTagName] = useState('');
@@ -32,6 +33,7 @@ export function EditFeedDialog({ open, feedId, onClose }: EditFeedDialogProps) {
     if (open && feed) {
       setTitle(feed.title);
       setUrl(feed.url);
+      setAutoRefresh(sub?.autoRefresh !== false);
       setSelectedFolderId(sub?.folderId);
 
       if (sub) {
@@ -56,11 +58,16 @@ export function EditFeedDialog({ open, feedId, onClose }: EditFeedDialogProps) {
         url: url.trim() || feed.url,
       });
 
-      // Update folder
-      if (sub && selectedFolderId !== sub.folderId) {
-        const db = (await import('@/db/schema')).db;
-        await db.subscriptions.update(sub.id, { folderId: selectedFolderId });
-        await useSubscriptionStore.getState().loadAll();
+      // Update subscription: folder + autoRefresh
+      if (sub) {
+        const updates: Record<string, unknown> = {};
+        if (selectedFolderId !== sub.folderId) updates.folderId = selectedFolderId;
+        if (autoRefresh !== (sub.autoRefresh !== false)) updates.autoRefresh = autoRefresh;
+        if (Object.keys(updates).length > 0) {
+          const db = (await import('@/db/schema')).db;
+          await db.subscriptions.update(sub.id, updates);
+          await useSubscriptionStore.getState().loadAll();
+        }
       }
 
       // Update tags
@@ -246,6 +253,27 @@ export function EditFeedDialog({ open, feedId, onClose }: EditFeedDialogProps) {
                 maxLength={30}
               />
             </form>
+          </div>
+
+          {/* Auto refresh toggle */}
+          <div className="flex items-center justify-between py-1">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              定时刷新
+            </label>
+            <button
+              type="button"
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                autoRefresh ? 'bg-mac-blue' : 'bg-black/15 dark:bg-white/15'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  autoRefresh ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
           </div>
 
           {/* Tags */}

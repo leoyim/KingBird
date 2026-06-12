@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   ChevronDown, ChevronRight, FolderOpen, Inbox,
-  Rss, Star, Tags, MoreHorizontal, X, Plus, Pencil, Trash2
+  Rss, Star, Tags, MoreHorizontal, X, Plus, Pencil, Trash2, Clock, CheckSquare, RotateCcw, RotateCw
 } from 'lucide-react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useArticleStore } from '@/stores/articleStore';
@@ -27,6 +27,10 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [tagEditorSubId, setTagEditorSubId] = useState<string | null>(null);
   const [contextMenuSubId, setContextMenuSubId] = useState<string | null>(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchSelectedIds, setBatchSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleAutoRefresh = useSubscriptionStore((s) => s.toggleAutoRefresh);
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
@@ -203,13 +207,29 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
 
       {/* Subscriptions */}
       <div className="flex-1 overflow-y-auto px-2 pb-3">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 px-2 mb-1 mt-2">
-          订阅源
-          {selectedTagId && (
-            <span className="normal-case ml-1 text-mac-blue font-normal">
-              (已筛选)
-            </span>
-          )}
+        <div className="flex items-center justify-between px-2 mb-1 mt-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60">
+            订阅源
+            {selectedTagId && (
+              <span className="normal-case ml-1 text-mac-blue font-normal">
+                (已筛选)
+              </span>
+            )}
+          </span>
+          <button
+            onClick={() => {
+              setBatchMode(!batchMode);
+              setBatchSelectedIds(new Set());
+            }}
+            className={`text-[10px] font-medium px-2 py-0.5 rounded transition-colors ${
+              batchMode
+                ? 'bg-mac-blue/10 text-mac-blue'
+                : 'text-mac-text-secondary/50 hover:text-mac-text-secondary hover:bg-black/5 dark:hover:bg-white/5'
+            }`}
+          >
+            <CheckSquare className="w-3 h-3 inline mr-0.5" />
+            {batchMode ? '退出' : '批量'}
+          </button>
         </div>
 
         {/* Folders */}
@@ -265,9 +285,30 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
                         isSelected={selectedFeedId === feed.id}
                         showTagEditor={tagEditorSubId === subId}
                         showContextMenu={contextMenuSubId === subId}
+                        batchMode={batchMode}
+                        isBatchSelected={subId ? batchSelectedIds.has(subId) : false}
+                        onBatchToggle={(sid) => {
+                          setBatchSelectedIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(sid)) next.delete(sid);
+                            else next.add(sid);
+                            return next;
+                          });
+                        }}
                         subTags={subId ? getTagsForSubscription(subId) : []}
                         allTags={tags}
-                        onClick={() => handleFeedClick(feed.id)}
+                        onClick={() => {
+                          if (batchMode && subId) {
+                            if (batchSelectedIds.has(subId)) {
+                              batchSelectedIds.delete(subId);
+                            } else {
+                              batchSelectedIds.add(subId);
+                            }
+                            setBatchSelectedIds(new Set(batchSelectedIds));
+                          } else {
+                            handleFeedClick(feed.id);
+                          }
+                        }}
                         onToggleTagEditor={(sid) => setTagEditorSubId(tagEditorSubId === sid ? null : sid)}
                         onToggleContextMenu={(sid) => setContextMenuSubId(contextMenuSubId === sid ? null : sid)}
                         onEditFeed={() => onEditFeed?.(feed.id)}
@@ -306,9 +347,30 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
               isSelected={selectedFeedId === feed.id}
               showTagEditor={tagEditorSubId === subId}
               showContextMenu={contextMenuSubId === subId}
+              batchMode={batchMode}
+              isBatchSelected={subId ? batchSelectedIds.has(subId) : false}
+              onBatchToggle={(sid) => {
+                setBatchSelectedIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(sid)) next.delete(sid);
+                  else next.add(sid);
+                  return next;
+                });
+              }}
               subTags={subId ? getTagsForSubscription(subId!) : []}
               allTags={tags}
-              onClick={() => handleFeedClick(feed.id)}
+              onClick={() => {
+                if (batchMode && subId) {
+                  if (batchSelectedIds.has(subId)) {
+                    batchSelectedIds.delete(subId);
+                  } else {
+                    batchSelectedIds.add(subId);
+                  }
+                  setBatchSelectedIds(new Set(batchSelectedIds));
+                } else {
+                  handleFeedClick(feed.id);
+                }
+              }}
               onToggleTagEditor={(sid) => setTagEditorSubId(tagEditorSubId === sid ? null : sid)}
               onToggleContextMenu={(sid) => setContextMenuSubId(contextMenuSubId === sid ? null : sid)}
               onEditFeed={() => onEditFeed?.(feed.id)}
@@ -337,6 +399,65 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
             </p>
           </div>
         )}
+
+        {/* Batch action bar */}
+        {batchMode && (
+          <div className="sticky bottom-0 mx-1 mb-2 p-2 rounded-lg bg-mac-blue/5 dark:bg-mac-blue/10 border border-mac-blue/20 flex items-center gap-2 flex-wrap">
+            {/* Select all toggle */}
+            <button
+              onClick={() => {
+                const allSubIds = subscriptions.map(s => s.id);
+                if (batchSelectedIds.size === allSubIds.length) {
+                  setBatchSelectedIds(new Set());
+                } else {
+                  setBatchSelectedIds(new Set(allSubIds));
+                }
+              }}
+              className="text-[11px] font-medium px-2 py-1 rounded bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shrink-0"
+            >
+              {batchSelectedIds.size === subscriptions.length ? '取消全选' : '全选'}
+            </button>
+
+            <span className="text-[11px] text-mac-text-secondary dark:text-mac-text-dark-secondary shrink-0">
+              已选 {batchSelectedIds.size}
+            </span>
+            <div className="flex-1 min-w-0" />
+            <button
+              onClick={async () => {
+                for (const subId of batchSelectedIds) {
+                  const sub = subscriptions.find(s => s.id === subId);
+                  if (sub?.autoRefresh === false) {
+                    await toggleAutoRefresh(subId);
+                  }
+                }
+                setBatchSelectedIds(new Set());
+                setBatchMode(false);
+              }}
+              disabled={batchSelectedIds.size === 0}
+              className="text-[11px] font-medium px-2 py-1 rounded bg-mac-blue/10 text-mac-blue hover:bg-mac-blue/20 transition-colors disabled:opacity-30"
+            >
+              <RotateCw className="w-3 h-3 inline mr-1" />
+              开启刷新
+            </button>
+            <button
+              onClick={async () => {
+                for (const subId of batchSelectedIds) {
+                  const sub = subscriptions.find(s => s.id === subId);
+                  if (sub?.autoRefresh !== false) {
+                    await toggleAutoRefresh(subId);
+                  }
+                }
+                setBatchSelectedIds(new Set());
+                setBatchMode(false);
+              }}
+              disabled={batchSelectedIds.size === 0}
+              className="text-[11px] font-medium px-2 py-1 rounded bg-mac-text-secondary/10 text-mac-text-secondary hover:bg-mac-text-secondary/20 transition-colors disabled:opacity-30"
+            >
+              <RotateCcw className="w-3 h-3 inline mr-1" />
+              取消刷新
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -350,6 +471,9 @@ function FeedSidebarItem({
   onClick,
   showTagEditor,
   showContextMenu,
+  batchMode,
+  isBatchSelected,
+  onBatchToggle,
   subTags,
   allTags,
   onToggleTagEditor,
@@ -365,6 +489,9 @@ function FeedSidebarItem({
   onClick: () => void;
   showTagEditor?: boolean;
   showContextMenu?: boolean;
+  batchMode?: boolean;
+  isBatchSelected?: boolean;
+  onBatchToggle?: (subId: string) => void;
   subTags: import('@/types').Tag[];
   allTags: import('@/types').Tag[];
   onToggleTagEditor: (subId: string) => void;
@@ -376,6 +503,13 @@ function FeedSidebarItem({
   const [newTagName, setNewTagName] = useState('');
   const availableTags = allTags.filter(t => !subTags.some(st => st.id === t.id));
 
+  // Per-feed refresh status from store
+  const refreshStatus = useSubscriptionStore((s) => s.feedRefreshState[feed.id]) ?? null;
+  const subscriptions = useSubscriptionStore((s) => s.subscriptions);
+  const toggleAutoRefresh = useSubscriptionStore((s) => s.toggleAutoRefresh);
+  const sub = subId ? subscriptions.find(s => s.id === subId) : undefined;
+  const autoRefreshDisabled = sub?.autoRefresh === false;
+
   return (
     <div>
       <div
@@ -386,21 +520,69 @@ function FeedSidebarItem({
         }`}
         onClick={onClick}
       >
-        {feed.imageUrl ? (
-          <img
-            src={feed.imageUrl}
-            alt=""
-            className="w-4 h-4 rounded-sm shrink-0 object-cover"
-            loading="lazy"
-          />
+        {/* --- Icon: batch checkbox or refresh status or favicon/RSS --- */}
+        {batchMode ? (
+          <span
+            className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
+              isBatchSelected
+                ? 'bg-mac-blue border-mac-blue text-white'
+                : 'border-black/15 dark:border-white/15 hover:border-mac-blue/50'
+            }`}
+          >
+            {isBatchSelected && (
+              <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </span>
         ) : (
-          <div className="w-4 h-4 rounded-sm shrink-0 bg-mac-blue/20 flex items-center justify-center">
-            <Rss className="w-2.5 h-2.5 text-mac-blue" />
-          </div>
+          <>
+            {refreshStatus === 'pending' && (
+              <span className="shrink-0 w-3.5 h-3.5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" title="刷新中…" />
+            )}
+            {refreshStatus === 'success' && (
+              <span className="shrink-0 text-green-500" title="刷新成功">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" clipRule="evenodd"/>
+                </svg>
+              </span>
+            )}
+            {refreshStatus === 'failure' && (
+              <span className="shrink-0 text-red-500" title="刷新失败">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                  <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/>
+                </svg>
+              </span>
+            )}
+            {!refreshStatus && (
+              feed.imageUrl ? (
+                <img
+                  src={feed.imageUrl}
+                  alt=""
+                  className="w-4 h-4 rounded-sm shrink-0 object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-4 h-4 rounded-sm shrink-0 bg-mac-blue/20 flex items-center justify-center">
+                  <Rss className="w-2.5 h-2.5 text-mac-blue" />
+                </div>
+              )
+            )}
+          </>
         )}
+
+        {/* Feed title */}
         <span className={`text-sm truncate flex-1 ${unreadCount > 0 ? 'font-medium' : ''}`}>
           {feed.title}
         </span>
+
+        {/* Auto-refresh disabled indicator */}
+        {autoRefreshDisabled && (
+          <span title="定时刷新已关闭">
+            <Clock className="w-3 h-3 shrink-0 text-mac-text-secondary/40" />
+          </span>
+        )}
+
         {/* Sub tags preview */}
         {subTags.length > 0 && !showTagEditor && !showContextMenu && (
           <div className="flex gap-0.5 shrink-0">
@@ -461,6 +643,17 @@ function FeedSidebarItem({
           >
             <Tags className="w-3.5 h-3.5" />
             管理标签
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleContextMenu(subId);
+              toggleAutoRefresh(subId);
+            }}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            {autoRefreshDisabled ? '开启刷新' : '取消刷新'}
           </button>
           <div className="h-px bg-black/5 dark:bg-white/5 mx-2 my-0.5" />
           <button

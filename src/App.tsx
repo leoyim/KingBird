@@ -14,6 +14,7 @@ import { useFilterStore } from '@/stores/filterStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useHighlightColor } from '@/hooks/useHighlightColor';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { refreshAllFeeds } from '@/services/rssService';
 import { buildSearchIndex } from '@/services/searchService';
@@ -25,6 +26,9 @@ function App() {
 
   // Track online status
   useOnlineStatus();
+
+  // Sync highlight color to CSS variable
+  useHighlightColor();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addFeedOpen, setAddFeedOpen] = useState(false);
@@ -71,21 +75,38 @@ function App() {
     setUnreadCount(unread);
   }, [articles, setUnreadCount]);
 
-  // Auto refresh
+  // Auto refresh (respects per-feed autoRefresh setting)
   useEffect(() => {
     if (preferences.autoRefreshInterval <= 0) return;
 
     const interval = setInterval(() => {
-      handleRefresh();
+      doRefresh(false);
     }, preferences.autoRefreshInterval * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [preferences.autoRefreshInterval]);
 
-  const handleRefresh = useCallback(async () => {
+  const doRefresh = useCallback(async (includeDisabled: boolean) => {
     setIsRefreshing(true);
+    const subStore = useSubscriptionStore.getState();
+
+    // Clear previous refresh statuses before starting new refresh
+    subStore.clearAllRefreshStatus();
+
     try {
-      await refreshAllFeeds();
+      await refreshAllFeeds((feedId, status) => {
+        subStore.setFeedRefreshStatus(feedId, status);
+
+        // Success auto-hides after 10 seconds
+        if (status === 'success') {
+          setTimeout(() => {
+            const current = useSubscriptionStore.getState().feedRefreshState[feedId];
+            if (current === 'success') {
+              useSubscriptionStore.getState().clearFeedRefreshStatus(feedId);
+            }
+          }, 10_000);
+        }
+      }, { includeDisabled });
       await loadArticles(selectedFeedId || undefined);
       await loadSubscriptions();
       setLastUpdatedAt(Date.now());
@@ -121,7 +142,7 @@ function App() {
         else useArticleStore.getState().markAsRead(selectedArticleId);
       }
     }, description: '切换已读' },
-    { key: 'r', handler: handleRefresh, description: '刷新' },
+    { key: 'r', handler: () => doRefresh(true), description: '刷新' },
     { key: 'n', handler: () => setAddFeedOpen(true), description: '添加订阅' },
     { key: '/', handler: toggleSearchPanel, description: '搜索' },
     { key: 'v', handler: () => {
@@ -151,7 +172,7 @@ function App() {
   return (
     <AppLayout
       onAddFeed={() => setAddFeedOpen(true)}
-      onRefresh={handleRefresh}
+      onRefresh={() => doRefresh(true)}
       isRefreshing={isRefreshing}
       onSelectFeed={handleSelectFeed}
       onSelectFolder={handleSelectFolder}

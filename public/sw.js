@@ -1,6 +1,6 @@
 // Service Worker for offline caching
-const CACHE_NAME = 'ezrss-v2';
-const ASSET_CACHE = 'ezrss-assets-v2';
+const CACHE_NAME = 'ezrss-v3';
+const ASSET_CACHE = 'ezrss-assets-v3';
 
 // App shell - minimum required for offline startup
 const APP_SHELL = [
@@ -28,6 +28,11 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+  // Notify all clients to refresh on SW update
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
+  });
+});
 });
 
 self.addEventListener('fetch', (event) => {
@@ -37,6 +42,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (request.url.startsWith('chrome-extension://')) return;
   if (request.url.includes('/api/')) return; // Don't cache API calls
+  // Skip caching in dev mode (localhost)
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') return;
 
   // For navigation requests, serve index.html (SPA)
   if (request.mode === 'navigate') {

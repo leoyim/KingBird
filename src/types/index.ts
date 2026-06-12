@@ -8,6 +8,10 @@ export interface Feed {
   lastFetchedAt?: number;
   errorCount: number;
   isActive: boolean;
+  /** HTTP ETag for conditional requests */
+  eTag?: string;
+  /** HTTP Last-Modified for conditional requests */
+  lastModified?: string;
 }
 
 export interface Subscription {
@@ -18,6 +22,8 @@ export interface Subscription {
   customTitle?: string;
   updateInterval: number;
   createdAt: number;
+  /** 是否参与定时自动刷新，默认 true */
+  autoRefresh: boolean;
 }
 
 export interface Article {
@@ -68,6 +74,13 @@ export interface Folder {
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type LayoutMode = 'list' | 'grid';
 export type ReadingMode = 'original' | 'plain' | 'bionic';
+export type RefreshStatus = 'pending' | 'success' | 'failure';
+
+export interface FeedRefreshState {
+  feedId: string;
+  status: RefreshStatus;
+  timestamp: number;
+}
 
 export interface UserPreferences {
   id: string;
@@ -76,6 +89,7 @@ export interface UserPreferences {
   readerFontSize: number;
   layout: LayoutMode;
   defaultReadingMode: ReadingMode;
+  highlightColor: string;
   keyboardShortcuts: Record<string, string>;
   notificationsEnabled: boolean;
   autoRefreshInterval: number;
@@ -102,6 +116,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   readerFontSize: 16,
   layout: 'list',
   defaultReadingMode: 'original',
+  highlightColor: '#007AFF',
   keyboardShortcuts: {
     'j': 'nextArticle',
     'k': 'prevArticle',

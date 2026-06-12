@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --ezrss-accent-rgb: 0 122 255; /* #007AFF */
+  }
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -78,7 +81,7 @@
   .article-content ul { @apply list-disc; }
   .article-content ol { @apply list-decimal; }
   .article-content blockquote { @apply border-l-4 border-mac-blue/30 pl-4 my-4 text-mac-text-secondary dark:text-mac-text-dark-secondary italic; }
-  .article-content pre { @apply rounded-xl bg-gray-900 dark:bg-black/50 p-4 my-4 overflow-x-auto; }
+  .article-content pre:not(.monaco-block pre) { @apply relative rounded-xl bg-gray-900 dark:bg-black/50 p-4 my-4 overflow-x-auto; font-family: "SF Mono", "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace; }
   .article-content code { @apply font-mono text-sm; }
   .article-content :not(pre) > code { @apply bg-black/5 dark:bg-white/10 rounded-md px-1.5 py-0.5 text-sm; }
   .article-content img { @apply rounded-xl my-4 max-w-full cursor-zoom-in; }
@@ -92,9 +95,214 @@
   color: inherit;
 }
 
-/* Prism.js theme overrides */
-pre[class*="language-"] {
-  @apply rounded-xl !bg-gray-900 dark:!bg-black/50;
+/* ========================================
+   Monaco Editor-style Code Blocks
+   ======================================== */
+
+.monaco-block {
+  position: relative;
+  margin: 1rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1e1e1e;
+  border: 1px solid #333333;
+}
+
+/* --- Floating lang label (top-left) --- */
+.monaco-block .monaco-block-lang {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #858585;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: "Cascadia Code", "JetBrains Mono", Consolas, "Menlo", monospace;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* --- Floating copy button (top-right) --- */
+.monaco-block .monaco-block-copy {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #858585;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  opacity: 0;
+}
+.monaco-block:hover .monaco-block-copy {
+  opacity: 1;
+}
+.monaco-block .monaco-block-copy:hover {
+  background: rgba(255,255,255,0.1);
+  color: #cccccc;
+  border-color: rgba(255,255,255,0.15);
+}
+.monaco-block .monaco-block-copy svg {
+  width: 13px;
+  height: 13px;
+}
+.monaco-block .monaco-block-copy.copied {
+  color: #4ec9b0;
+  border-color: rgba(78,201,176,0.25);
+  background: rgba(78,201,176,0.08);
+  opacity: 1;
+}
+
+/* --- Code area --- */
+.monaco-block pre[class*="language-"] {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  padding: 10px 0 14px 0 !important;
+  background: #1e1e1e !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #5a5a5a transparent;
+}
+.monaco-block pre[class*="language-"]::-webkit-scrollbar { height: 8px; }
+.monaco-block pre[class*="language-"]::-webkit-scrollbar-track { background: transparent; }
+.monaco-block pre[class*="language-"]::-webkit-scrollbar-thumb {
+  background: #5a5a5a;
+  border-radius: 4px;
+}
+
+.monaco-block pre code {
+  display: block;
+  padding: 0;
+  margin: 0;
+  color: #d4d4d4;
+  font-family: "Cascadia Code", "JetBrains Mono", "Fira Code", "SF Mono", Consolas, "Menlo", monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+/* --- Each line = [line-num] [line-cnt] --- */
+.monaco-block .code-line {
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  white-space: pre;
+  line-height: 1.65;
+  font-size: 12.5px;
+}
+
+/* Gutter: line number, right-aligned, with right-border as separator */
+.monaco-block .line-num {
+  flex-shrink: 0;
+  width: 46px;
+  text-align: right;
+  color: #6e7681;
+  font-size: inherit;
+  line-height: inherit;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  border-right: 1px solid #3a3a3a;
+  margin-right: 16px;
+  padding-right: 12px;
+}
+
+/* Code text area */
+.monaco-block .line-cnt {
+  flex: 1;
+  overflow: visible;
+  line-height: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  white-space: pre;
+}
+
+/* Line hover */
+.monaco-block .code-line:hover {
+  background: rgba(255,255,255,0.04);
+}
+.monaco-block .code-line:hover .line-num {
+  color: #c9d1d9;
+}
+
+/* ========================================
+   VS Code Dark+ Prism Token Colors
+   ======================================== */
+
+/* Comment / Docstring */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata { color: #6a9955; }
+
+/* String / Char */
+.token.string,
+.token.char { color: #ce9178; }
+
+/* Keyword */
+.token.keyword,
+.token.atrule { color: #569cd6; }
+
+/* Function name */
+.token.function { color: #dcdcaa; }
+
+/* Class / Type / Builtin */
+.token.class-name,
+.token.builtin { color: #4ec9b0; }
+
+/* Variable / Parameter / Property */
+.token.variable,
+.token.parameter,
+.token.property { color: #9cdcfe; }
+
+/* Number / Boolean / Constant */
+.token.number { color: #b5cea8; }
+.token.boolean,
+.token.constant { color: #569cd6; }
+.token.symbol { color: #b5cea8; }
+
+/* Tag / Selector */
+.token.tag { color: #569cd6; }
+.token.selector { color: #d7ba7d; }
+
+/* Attribute */
+.token.attr-name { color: #9cdcfe; }
+.token.attr-value { color: #ce9178; }
+
+/* Punctuation / Operator */
+.token.punctuation { color: #808080; }
+.token.operator { color: #d4d4d4; }
+
+/* Regex / Error */
+.token.regex { color: #d16969; }
+.token.important,
+.token.error { color: #f44747; font-weight: bold; }
+
+/* Namespace */
+.token.namespace { color: #4ec9b0; }
+
+/* Deleted / Inserted (diff) */
+.token.deleted { color: #f14c4c; text-decoration: none; }
+.token.inserted { color: #73c991; text-decoration: none; }
+
+/* URL / Entity */
+.token.url { color: #3794ff; }
+.token.entity { color: #569cd6; }
+
+/* Inline code (non-block) keeps original style */
+.article-content :not(pre) > code {
+  @apply bg-black/5 dark:bg-white/10 rounded-md px-1.5 py-0.5 text-sm;
 }
 
 /* ========================================

@@ -7,16 +7,44 @@ import { db } from '@/db/schema';
 import type { ThemeMode } from '@/types';
 import { useRef, useState } from 'react';
 
+interface ColorSwatch {
+  hex: string;
+  label: string;
+}
+
+const CHINESE_COLORS: ColorSwatch[] = [
+  { hex: '#FF461F', label: '朱砂' },
+  { hex: '#9D2933', label: '胭脂' },
+  { hex: '#DB5A6B', label: '海棠红' },
+  { hex: '#FFD700', label: '明黄' },
+  { hex: '#177CB0', label: '天青' },
+  { hex: '#789262', label: '竹青' },
+  { hex: '#4A4266', label: '黛色' },
+  { hex: '#1C1C1C', label: '玄色' },
+];
+
+const MODERN_COLORS: ColorSwatch[] = [
+  { hex: '#A3B18A', label: '鼠尾草绿' },
+  { hex: '#E2725B', label: '陶土色' },
+  { hex: '#1F3A5F', label: '海军蓝' },
+  { hex: '#6E8CA0', label: '雾霾蓝' },
+  { hex: '#B497BD', label: '薰衣草紫' },
+  { hex: '#FF6F61', label: '珊瑚橙' },
+  { hex: '#C68E59', label: '焦糖棕' },
+  { hex: '#BE3455', label: '活力洋红' },
+];
+
 interface SettingsPanelProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
-  const { preferences, setTheme, setEyeCareMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled } = useUIStore();
+  const { preferences, setTheme, setEyeCareMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled, setHighlightColor } = useUIStore();
   const { loadAll } = useSubscriptionStore();
   const { rules, addRule, removeRule, toggleRule } = useFilterStore();
   const [newKeyword, setNewKeyword] = useState('');
+  const [customHex, setCustomHex] = useState('');
   const opmlInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +102,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   ];
 
   return (
-    <div className="absolute inset-0 z-40 bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
       <div className="max-w-lg mx-auto px-6 py-8">
         <h2 className="text-lg font-semibold mb-6">设置</h2>
 
@@ -96,6 +124,68 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 <span className="text-sm">{label}</span>
               </button>
             ))}
+          </div>
+        </section>
+
+        {/* Highlight color */}
+        <section className="mb-8">
+          <h3 className="text-sm font-medium mb-3">高亮色</h3>
+          <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary mb-4">
+            选择文章和订阅选中时的高亮颜色
+          </p>
+
+          {/* Color swatch component */}
+          <ColorSwatchGroup
+            title="传统中国色"
+            colors={CHINESE_COLORS}
+            selectedHex={preferences.highlightColor}
+            onSelect={setHighlightColor}
+          />
+
+          <ColorSwatchGroup
+            title="现代流行色"
+            colors={MODERN_COLORS}
+            selectedHex={preferences.highlightColor}
+            onSelect={setHighlightColor}
+          />
+
+          {/* Custom hex input */}
+          <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5">
+            <label className="text-[11px] font-medium text-mac-text-secondary dark:text-mac-text-dark-secondary mb-1.5 block">
+              自定义色值
+            </label>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const hex = customHex.trim();
+                if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+                  setHighlightColor(hex);
+                  setCustomHex('');
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              <div
+                className="w-7 h-7 rounded-md border border-black/10 dark:border-white/10 shrink-0"
+                style={{ backgroundColor: preferences.highlightColor }}
+              />
+              <input
+                type="text"
+                value={customHex}
+                onChange={(e) => setCustomHex(e.target.value)}
+                placeholder="#FF461F"
+                className="input-mac flex-1 h-8 text-xs font-mono"
+                maxLength={7}
+                pattern="#[0-9a-fA-F]{6}"
+              />
+              <button
+                type="submit"
+                disabled={!/^#[0-9a-fA-F]{6}$/.test(customHex.trim())}
+                className="btn-mac-ghost h-8 px-3 text-xs shrink-0 disabled:opacity-30"
+              >
+                应用
+              </button>
+            </form>
           </div>
         </section>
 
@@ -317,6 +407,62 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             清除所有数据
           </button>
         </section>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Color swatch group (sub-component) ---- */
+
+function ColorSwatchGroup({
+  title,
+  colors,
+  selectedHex,
+  onSelect,
+}: {
+  title: string;
+  colors: ColorSwatch[];
+  selectedHex: string;
+  onSelect: (hex: string) => void;
+}) {
+  return (
+    <div className="mb-3">
+      <p className="text-[11px] font-medium text-mac-text-secondary/70 dark:text-mac-text-dark-secondary/70 mb-2">
+        {title}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {colors.map(({ hex, label }) => {
+          const isSelected = selectedHex === hex;
+          return (
+            <button
+              key={hex}
+              onClick={() => onSelect(hex)}
+              title={label}
+              className={`group relative w-10 h-10 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center ${
+                isSelected ? 'scale-110' : 'hover:scale-105'
+              }`}
+              style={{ backgroundColor: hex }}
+            >
+              {/* Color name tooltip on hover */}
+              <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[10px] font-medium text-white bg-black/70 dark:bg-white/20 backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                {label}
+              </span>
+
+              {/* Selected checkmark */}
+              {isSelected && (
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+
+              {/* Selection ring */}
+              {isSelected && (
+                <span className="absolute -inset-[4px] rounded-xl ring-2 ring-offset-1 ring-current opacity-40 pointer-events-none"
+                  style={{ color: hex }} />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

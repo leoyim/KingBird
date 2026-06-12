@@ -1,35 +1,67 @@
-import { useEffect, useRef } from 'react';
-import { highlightCodeBlock } from '@/services/highlightService';
-import { SUPPORTED_LANGUAGES } from '@/services/highlightService';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { highlightCodeBlock, addLineNumbers, SUPPORTED_LANGUAGES } from '@/services/highlightService';
 
 interface CodeBlockProps {
   code: string;
   language?: string;
 }
 
+const COPY_ICON = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="5" y="5" width="9" height="9" rx="1.5" />
+    <path d="M3 11V3a1 1 0 011-1h7" />
+  </svg>
+);
+
+const CHECK_ICON = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M3 8l3.5 3.5L13 4" />
+  </svg>
+);
+
 export function CodeBlock({ code, language }: CodeBlockProps) {
+  const preRef = useRef<HTMLPreElement>(null);
   const codeRef = useRef<HTMLElement>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (codeRef.current) {
-      highlightCodeBlock(codeRef.current);
+    if (!codeRef.current) return;
+    highlightCodeBlock(codeRef.current);
+    if (preRef.current) {
+      addLineNumbers(preRef.current);
     }
   }, [code, language]);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // silently fail
+    }
+  }, [code]);
 
   const langLabel = language ? SUPPORTED_LANGUAGES[language] || language : '';
 
   return (
-    <div className="relative group my-4">
-      {langLabel && (
-        <div className="absolute top-0 right-0 px-2 py-1 text-[10px] text-white/40 bg-black/20 rounded-bl-md z-10">
-          {langLabel}
-        </div>
-      )}
-      <pre className={`language-${language || 'text'} rounded-xl overflow-x-auto`}>
+    <div className="monaco-block my-4">
+      <pre ref={preRef} className={`language-${language || 'text'}`}>
         <code ref={codeRef} className={`language-${language || 'text'}`}>
           {code}
         </code>
       </pre>
+      {langLabel && (
+        <span className="monaco-block-lang">{langLabel}</span>
+      )}
+      <button
+        onClick={handleCopy}
+        className={`monaco-block-copy ${copied ? 'copied' : ''}`}
+        title="复制代码"
+      >
+        {copied ? CHECK_ICON : COPY_ICON}
+        <span>{copied ? '已复制' : '复制'}</span>
+      </button>
     </div>
   );
 }

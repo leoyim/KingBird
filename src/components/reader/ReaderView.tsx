@@ -1,19 +1,18 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import {
-  ArrowLeft, ExternalLink, Star, StarOff,
-  BookmarkPlus, BookmarkCheck, Type, Eye, EyeOff,
-  ChevronLeft, ChevronRight, Maximize2, Minimize2
+  ArrowLeft, ExternalLink, Star, Type, Eye, EyeOff,
+  ChevronLeft, ChevronRight,
+  ImageIcon, Clock, QrCode, X
 } from 'lucide-react';
+import QRCode from 'qrcode';
 import { useArticleStore } from '@/stores/articleStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useUIStore } from '@/stores/uiStore';
-import { useTagStore } from '@/stores/tagStore';
-import { formatRelativeTime, formatDate } from '@/utils/dateFormatter';
+import { formatRelativeTime } from '@/utils/dateFormatter';
 import { sanitizeHTML } from '@/utils/htmlSanitizer';
 import { highlightAllCodeBlocks } from '@/services/highlightService';
 import { convertToBionicReading, extractPlainText, cleanArticleContent } from '@/services/readabilityService';
-import type { Article, ReadingMode } from '@/types';
-import { LazyImage } from './LazyImage';
+import type { ReadingMode } from '@/types';
 
 interface ReaderViewProps {
   articleId: string | null;
@@ -30,9 +29,12 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
   const feeds = useSubscriptionStore((s) => s.feeds);
   const preferences = useUIStore((s) => s.preferences);
   const setReaderFontSize = useUIStore((s) => s.setReaderFontSize);
-  const setReadingMode = useUIStore((s) => s.setReadingMode);
 
   const [localReadingMode, setLocalReadingMode] = useState<ReadingMode>(preferences.defaultReadingMode);
+  const [progress, setProgress] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const article = articles.find((a) => a.id === articleId);
@@ -44,11 +46,72 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
   const nextArticle = articleIndex < articles.length - 1 ? articles[articleIndex + 1] : null;
   const prevArticle = articleIndex > 0 ? articles[articleIndex - 1] : null;
 
+  // Reset progress when article changes
   useEffect(() => {
-    if (articleId) {
-      markAsRead(articleId);
+    setProgress(0);
+    setCompleted(false);
+    setShowQR(false);
+    setQrDataUrl(null);
+  }, [articleId]);
+
+  // Generate QR code when requested
+  const handleShowQR = useCallback(async () => {
+    if (qrDataUrl) {
+      setShowQR(!showQR);
+      return;
     }
-  }, [articleId, markAsRead]);
+    try {
+      const dataUrl = await QRCode.toDataURL(article?.link || window.location.href, {
+        width: 180,
+        margin: 2,
+        color: { dark: '#000000', light: '#FFFFFF' },
+      });
+      setQrDataUrl(dataUrl);
+      setShowQR(true);
+    } catch {
+      // QR generation failed silently
+    }
+  }, [article?.link, qrDataUrl, showQR]);
+
+  // Reading statistics
+  const readingStats = useMemo(() => {
+    if (!article?.content && !article?.summary) return null;
+    const raw = article.content || article.summary || '';
+    const plainText = extractPlainText(raw);
+    const charCount = plainText.replace(/\s/g, '').length;
+    const imageCount = (raw.match(/<img\s/gi) || []).length;
+    const minutes = Math.max(1, Math.ceil(charCount / 400));
+    return { charCount, imageCount, minutes };
+  }, [article?.content, article?.summary]);
+
+  // Scroll progress tracking
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el || !articleId) return;
+
+    // For short content that doesn't scroll, mark as read immediately
+    if (el.scrollHeight <= el.clientHeight + 10) {
+      setProgress(100);
+      setCompleted(true);
+      markAsRead(articleId);
+      return;
+    }
+
+    const handleScroll = () => {
+      const scrollHeight = el.scrollHeight - el.clientHeight;
+      if (scrollHeight <= 0) return;
+      const pct = Math.round((el.scrollTop / scrollHeight) * 100);
+      const pctClamped = Math.min(100, Math.max(0, pct));
+      setProgress(pctClamped);
+      if (pctClamped >= 100 && !completed) {
+        setCompleted(true);
+        markAsRead(articleId);
+      }
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [articleId, completed, markAsRead]);
 
   // Scroll to top when article changes
   useEffect(() => {
@@ -118,7 +181,7 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden relative">
       {/* Reader Toolbar */}
       <div className="h-10 flex items-center justify-between px-4 border-b border-black/5 dark:border-white/5 shrink-0">
         <div className="flex items-center gap-1">
@@ -143,6 +206,28 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Reading stats - center */}
+        {readingStats && (
+          <div className="flex items-stretch bg-black/5 dark:bg-white/5 rounded-lg overflow-hidden shrink-0 shadow-sm">
+            <span className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium tabular-nums" title="字数">
+              <Type className="w-3.5 h-3.5 opacity-50" />
+              {readingStats.charCount.toLocaleString()}
+            </span>
+            <div className="w-px bg-black/10 dark:bg-white/10" />
+            <span className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium tabular-nums" title="图片数">
+              <ImageIcon className="w-3.5 h-3.5 opacity-50" />
+              {readingStats.imageCount}
+            </span>
+            <div className="w-px bg-black/10 dark:bg-white/10" />
+            <span className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium tabular-nums" title="预估阅读时长">
+              <Clock className="w-3.5 h-3.5 opacity-50" />
+              {readingStats.minutes}min
+            </span>
+            <div className="w-px bg-black/10 dark:bg-white/10" />
+            <ReadingProgressRing progress={progress} completed={completed} />
+          </div>
+        )}
 
         <div className="flex items-center gap-0.5">
           {/* Reading mode toggle */}
@@ -216,8 +301,40 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
           >
             <ExternalLink className="w-4 h-4" />
           </a>
+
+          {/* QR Code */}
+          <button
+            onClick={handleShowQR}
+            className={`btn-mac-ghost h-7 w-7 p-0 rounded-lg ${showQR ? 'bg-mac-blue/10 text-mac-blue' : ''}`}
+            title="显示二维码"
+          >
+            <QrCode className="w-4 h-4" />
+          </button>
         </div>
       </div>
+
+      {/* QR Code Popover */}
+      {showQR && qrDataUrl && (
+        <div className="absolute right-4 top-11 z-50 card-mac p-3 animate-scale-in shadow-xl">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-medium text-mac-text-secondary">扫描二维码打开原文</span>
+            <button
+              onClick={() => setShowQR(false)}
+              className="hover:bg-black/5 dark:hover:bg-white/5 rounded-full p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <img
+            src={qrDataUrl}
+            alt="QR Code"
+            className="w-[140px] h-[140px] rounded-md"
+          />
+          <p className="text-[10px] text-mac-text-secondary/60 mt-1.5 max-w-[140px] truncate">
+            {article.link}
+          </p>
+        </div>
+      )}
 
       {/* Article Content */}
       <div className="flex-1 overflow-y-auto" ref={contentRef}>
@@ -256,5 +373,40 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
         </article>
       </div>
     </div>
+  );
+}
+
+// --- Reading progress ring ---
+
+function ReadingProgressRing({ progress, completed }: { progress: number; completed: boolean }) {
+  const circumference = 2 * Math.PI * 7;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2" title={`阅读进度 ${Math.round(progress)}%`}>
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <circle
+          cx="9" cy="9" r={7}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-black/10 dark:text-white/10"
+        />
+        <circle
+          cx="9" cy="9" r={7}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform="rotate(-90 9 9)"
+          className={`transition-all duration-200 ${completed ? 'text-mac-green' : 'text-mac-blue'}`}
+        />
+      </svg>
+      <span className={`text-xs font-medium tabular-nums ${completed ? 'text-mac-green' : 'text-mac-blue'}`}>
+        {Math.round(progress)}%
+      </span>
+    </span>
   );
 }

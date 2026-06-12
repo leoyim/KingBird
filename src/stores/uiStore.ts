@@ -20,6 +20,7 @@ interface UIState {
   setReadingMode: (mode: ReadingMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   setAutoRefreshInterval: (interval: number) => void;
+  setHighlightColor: (color: string) => void;
   updatePreferences: (updates: Partial<UserPreferences>) => void;
 
   toggleSidebar: () => void;
@@ -50,8 +51,9 @@ export const useUIStore = create<UIState>()(
       setReadingMode: (defaultReadingMode) => set((s) => ({ preferences: { ...s.preferences, defaultReadingMode } })),
       setNotificationsEnabled: (notificationsEnabled) => set((s) => ({ preferences: { ...s.preferences, notificationsEnabled } })),
       setAutoRefreshInterval: (autoRefreshInterval) => set((s) => ({ preferences: { ...s.preferences, autoRefreshInterval } })),
+      setHighlightColor: (highlightColor: string) => set((s) => ({ preferences: { ...s.preferences, highlightColor } })),
 
-      updatePreferences: (updates) => set((s) => ({ preferences: { ...s.preferences, ...updates } })),
+  updatePreferences: (updates) => set((s) => ({ preferences: { ...s.preferences, ...updates } })),
 
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleSearchPanel: () => set((s) => ({ searchPanelOpen: !s.searchPanelOpen, settingsPanelOpen: false })),

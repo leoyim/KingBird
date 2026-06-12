@@ -99,6 +99,7 @@ export async function importOPML(file: File): Promise<{ feeds: number; folders: 
       feedId,
       sortOrder: sortOrder++,
       updateInterval: 30,
+      autoRefresh: true,
       createdAt: Date.now(),
     });
   }

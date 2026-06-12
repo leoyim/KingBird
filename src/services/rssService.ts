@@ -250,18 +250,38 @@ function emptyFeed(): ParsedFeed {
 
 const FETCH_TIMEOUT_MS = 15000;
 
-async function fetchWithProxy(url: string): Promise<string> {
-  // Strategy 1: Direct fetch (works for CORS-enabled servers)
+async function fetchWithProxy(
+  url: string,
+  opts?: { eTag?: string; lastModified?: string }
+): Promise<{ body: string; eTag?: string; lastModified?: string } | null> {
+  const headers: Record<string, string> = {
+    Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+  };
+
+  // Conditional request headers
+  if (opts?.eTag) headers['If-None-Match'] = opts.eTag;
+  if (opts?.lastModified) headers['If-Modified-Since'] = opts.lastModified;
+
+  // Strategy 1: Direct fetch with conditional headers
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     const res = await fetch(url, {
       mode: 'cors',
       signal: ctrl.signal,
-      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml */*' },
+      headers,
     });
     clearTimeout(timer);
-    if (res.ok) return await res.text();
+
+    if (res.status === 304) return null; // Not modified — save bandwidth!
+    if (res.ok) {
+      const body = await res.text();
+      return {
+        body,
+        eTag: res.headers.get('ETag') || undefined,
+        lastModified: res.headers.get('Last-Modified') || undefined,
+      };
+    }
     if (res.status === 405 || res.status === 403) {
       // CORS blocked, fallthrough to proxy
     } else {
@@ -275,7 +295,7 @@ async function fetchWithProxy(url: string): Promise<string> {
     }
   }
 
-  // Strategy 2: Try each CORS proxy in order
+  // Strategy 2: CORS proxies (no conditional headers — proxies typically strip them)
   let lastError: Error | null = null;
   for (const proxyBase of CORS_PROXIES) {
     try {
@@ -287,11 +307,9 @@ async function fetchWithProxy(url: string): Promise<string> {
 
       if (res.ok) {
         const text = await res.text();
-        // Validate that we got back something XML-like
         if (text.includes('<') && (text.includes('<rss') || text.includes('<feed') || text.includes('<entry') || text.includes('<item') || text.includes('<?xml'))) {
-          return text;
+          return { body: text };
         }
-        // Got response but it doesn't look like a feed; try next proxy
         lastError = new Error('Response is not valid RSS/Atom XML');
         continue;
       }
@@ -339,8 +357,9 @@ async function migrateLegacyArticles(feedId: string): Promise<void> {
 // ---- Public API ----
 
 export async function fetchFeedMeta(url: string): Promise<Partial<Feed>> {
-  const xml = await fetchWithProxy(url);
-  const parsed = parseFeed(xml);
+  const result = await fetchWithProxy(url);
+  if (!result) throw new Error('Feed not available');
+  const parsed = parseFeed(result.body);
 
   return {
     id: generateId(),
@@ -352,15 +371,38 @@ export async function fetchFeedMeta(url: string): Promise<Partial<Feed>> {
     lastFetchedAt: Date.now(),
     errorCount: 0,
     isActive: true,
+    eTag: result.eTag,
+    lastModified: result.lastModified,
   };
 }
 
-export async function fetchArticles(feedUrl: string, feedId: string): Promise<Article[]> {
-  const xml = await fetchWithProxy(feedUrl);
+export async function fetchArticles(feedUrl: string, feedId: string): Promise<{ articles: Article[]; notModified: boolean }> {
+  // Load feed to get conditional headers
+  const feed = await db.feeds.get(feedId);
+
+  const result = await fetchWithProxy(feedUrl, {
+    eTag: feed?.eTag,
+    lastModified: feed?.lastModified,
+  });
+
+  // 304 Not Modified — feed unchanged, skip all processing!
+  if (!result) {
+    // Still update lastFetchedAt so we know we checked
+    await db.feeds.update(feedId, { lastFetchedAt: Date.now() });
+    return { articles: [], notModified: true };
+  }
+
+  const { body: xml, eTag, lastModified } = result;
   const parsed = parseFeed(xml);
 
+  // Update conditional headers on the feed
+  await db.feeds.update(feedId, {
+    eTag: eTag || feed?.eTag,
+    lastModified: lastModified || feed?.lastModified,
+    lastFetchedAt: Date.now(),
+  });
+
   // One-time cleanup: remove legacy UUID-based articles for this feed
-  // (old articles used crypto.randomUUID(), causing duplicates on refresh)
   await migrateLegacyArticles(feedId);
 
   // Build articles with deterministic IDs (based on link) for dedup
@@ -388,21 +430,19 @@ export async function fetchArticles(feedUrl: string, feedId: string): Promise<Ar
     });
   }
 
-  // bulkPut with deterministic ID = upsert semantics:
-  // - New article (new link) → inserted
-  // - Existing article (same link/same id) → content & fetchedAt updated
   if (articles.length > 0) {
     await db.articles.bulkPut(articles);
   }
 
-  // Update feed lastFetchedAt
-  await db.feeds.update(feedId, { lastFetchedAt: Date.now() });
-
-  return articles;
+  return { articles, notModified: false };
 }
 
-export async function refreshAllFeeds(): Promise<number> {
+export async function refreshAllFeeds(
+  onProgress?: (feedId: string, status: 'pending' | 'success' | 'failure') => void,
+  options?: { includeDisabled?: boolean }
+): Promise<number> {
   const subscriptions = await db.subscriptions.toArray();
+  const includeDisabled = options?.includeDisabled ?? false;
 
   const results = await Promise.allSettled(
     subscriptions
@@ -410,11 +450,24 @@ export async function refreshAllFeeds(): Promise<number> {
         const feed = await db.feeds.get(sub.feedId);
         if (!feed || !feed.isActive) return 0;
 
-        const existingLinks = new Set(
-          (await db.articles.where('feedId').equals(feed.id).toArray()).map(a => a.link)
-        );
-        const articles = await fetchArticles(feed.url, feed.id);
-        return articles.filter(a => !existingLinks.has(a.link)).length;
+        // Skip feeds with auto-refresh disabled — unless explicitly overriding
+        if (!includeDisabled && sub.autoRefresh === false) return 0;
+
+        onProgress?.(feed.id, 'pending');
+
+        try {
+          const existingLinks = new Set(
+            (await db.articles.where('feedId').equals(feed.id).toArray()).map(a => a.link)
+          );
+          const { articles } = await fetchArticles(feed.url, feed.id);
+          const newCount = articles.filter(a => !existingLinks.has(a.link)).length;
+
+          onProgress?.(feed.id, 'success');
+          return newCount;
+        } catch (err) {
+          onProgress?.(feed.id, 'failure');
+          throw err;
+        }
       })
   );
 
@@ -436,10 +489,11 @@ export async function detectFeedUrl(url: string): Promise<string[]> {
 
   // Fetch page and look for <link rel="alternate" type="application/rss+xml">
   try {
-    const html = await fetchWithProxy(url);
+    const result = await fetchWithProxy(url);
+    if (!result) return found;
     const linkPattern = /<link[^>]+rel=["'](?:alternate)["'][^>]+type=["']application\/(rss|atom)\+xml["'][^>]+href=["']([^"']+)["']/gi;
     let match: RegExpExecArray | null;
-    while ((match = linkPattern.exec(html)) !== null) {
+    while ((match = linkPattern.exec(result.body)) !== null) {
       const href = match[2];
       found.push(href.startsWith('http') ? href : new URL(href, url).href);
     }

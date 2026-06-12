@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Subscription, Feed, Folder } from '@/types';
+import type { Subscription, Feed, Folder, RefreshStatus } from '@/types';
 import { db } from '@/db/schema';
 
 interface SubscriptionState {
@@ -10,6 +10,9 @@ interface SubscriptionState {
   selectedFolderId: string | null;
   isLoading: boolean;
 
+  /** Per-feed refresh status: feedId → status */
+  feedRefreshState: Record<string, RefreshStatus>;
+
   setSelectedFeedId: (id: string | null) => void;
   setSelectedFolderId: (id: string | null) => void;
 
@@ -19,7 +22,12 @@ interface SubscriptionState {
   addFolder: (name: string, parentId?: string) => Promise<void>;
   removeFolder: (id: string) => Promise<void>;
   renameFolder: (id: string, name: string) => Promise<void>;
+  toggleAutoRefresh: (subscriptionId: string) => Promise<void>;
   updateFeed: (id: string, updates: Partial<Feed>) => Promise<void>;
+
+  setFeedRefreshStatus: (feedId: string, status: RefreshStatus) => void;
+  clearFeedRefreshStatus: (feedId: string) => void;
+  clearAllRefreshStatus: () => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
@@ -29,6 +37,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   selectedFeedId: null,
   selectedFolderId: null,
   isLoading: false,
+  feedRefreshState: {},
 
   setSelectedFeedId: (id) => set({ selectedFeedId: id, selectedFolderId: null }),
   setSelectedFolderId: (id) => set({ selectedFolderId: id, selectedFeedId: null }),
@@ -51,6 +60,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       folderId,
       sortOrder: get().subscriptions.length,
       updateInterval: 30,
+      autoRefresh: true,
       createdAt: Date.now(),
     };
     await db.subscriptions.put(subscription);
@@ -94,6 +104,33 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
   updateFeed: async (id, updates) => {
     await db.feeds.update(id, updates);
+    await get().loadAll();
+  },
+
+  setFeedRefreshStatus: (feedId, status) => {
+    set((state) => ({
+      feedRefreshState: { ...state.feedRefreshState, [feedId]: status },
+    }));
+  },
+
+  clearFeedRefreshStatus: (feedId) => {
+    set((state) => {
+      const next = { ...state.feedRefreshState };
+      delete next[feedId];
+      return { feedRefreshState: next };
+    });
+  },
+
+  clearAllRefreshStatus: () => {
+    set({ feedRefreshState: {} });
+  },
+
+  toggleAutoRefresh: async (subscriptionId) => {
+    const sub = await db.subscriptions.get(subscriptionId);
+    if (!sub) return;
+    // undefined (legacy data) or true → disable; false → enable
+    const newValue = sub.autoRefresh === false;
+    await db.subscriptions.update(subscriptionId, { autoRefresh: newValue });
     await get().loadAll();
   },
 }));
