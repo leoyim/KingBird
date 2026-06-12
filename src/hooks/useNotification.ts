@@ -15,8 +15,8 @@ export function useNotification() {
     showNotification(article.title, {
       body: `${feedTitle}\n${article.summary?.slice(0, 100) || ''}`,
       data: { url: article.link },
-      icon: '/ezrss-icon.svg',
-      badge: '/ezrss-icon.svg',
+      icon: '/ezrss-icon.png',
+      badge: '/ezrss-icon.png',
       tag: `article-${article.id}`,
     });
   }, []);

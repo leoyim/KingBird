@@ -11,6 +11,7 @@ interface UIState {
   isOnline: boolean;
   lastUpdatedAt: number | null;
   unreadCount: number;
+  starredFilter: boolean;
 
   setTheme: (theme: ThemeMode) => void;
   setEyeCareMode: (enabled: boolean) => void;
@@ -27,6 +28,7 @@ interface UIState {
   setOnline: (online: boolean) => void;
   setLastUpdatedAt: (timestamp: number) => void;
   setUnreadCount: (count: number) => void;
+  setStarredFilter: (value: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -39,6 +41,7 @@ export const useUIStore = create<UIState>()(
       isOnline: navigator.onLine,
       lastUpdatedAt: null,
       unreadCount: 0,
+      starredFilter: false,
 
       setTheme: (theme) => set((s) => ({ preferences: { ...s.preferences, theme } })),
       setEyeCareMode: (eyeCareMode) => set((s) => ({ preferences: { ...s.preferences, eyeCareMode } })),
@@ -56,6 +59,7 @@ export const useUIStore = create<UIState>()(
       setOnline: (isOnline) => set({ isOnline }),
       setLastUpdatedAt: (lastUpdatedAt) => set({ lastUpdatedAt }),
       setUnreadCount: (unreadCount) => set({ unreadCount }),
+      setStarredFilter: (starredFilter) => set({ starredFilter }),
     }),
     {
       name: 'ezrss-ui-store',

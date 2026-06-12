@@ -1,6 +1,8 @@
 // Web Worker for background RSS fetching
 // Uses DOMParser-based RSS parsing (no Node.js dependencies)
 
+import { articleIdFromLink } from '@/utils/articleId';
+
 interface FetchMessage {
   type: 'fetchAll' | 'fetchFeed';
   feedId?: string;
@@ -42,14 +44,19 @@ function stripHTML(html: string): string {
 function safeText(el: Element | null, ...tagNames: string[]): string {
   if (!el) return '';
   for (const tag of tagNames) {
-    const nsMatch = el.querySelector(tag.replace(':', '\\:'));
-    if (nsMatch?.textContent) return nsMatch.textContent.trim();
+    // Normalize: strip existing CSS escapes, then properly re-escape
+    const normalized = tag.replace(/\\:/g, ':');
+    const escaped = normalized.replace(/:/g, '\\:');
     try {
-      const byTag = el.getElementsByTagName(tag)[0] as Element | undefined;
+      const nsMatch = el.querySelector(escaped);
+      if (nsMatch?.textContent) return nsMatch.textContent.trim();
+    } catch { /* ignore */ }
+    try {
+      const byTag = el.getElementsByTagName(normalized)[0] as Element | undefined;
       if (byTag?.textContent) return byTag.textContent.trim();
     } catch { /* ignore */ }
-    const plain = el.querySelector(tag.split(':')[1] || tag);
-    if (plain?.textContent && tag.includes(':')) return plain.textContent.trim();
+    const plain = el.querySelector(normalized.split(':')[1] || normalized);
+    if (plain?.textContent && normalized.includes(':')) return plain.textContent.trim();
   }
   return '';
 }
@@ -178,12 +185,7 @@ async function fetchAndParseFeed(feedId: string, feedUrl: string): Promise<numbe
 
   for (const item of items.slice(0, 50)) {
     const link = item.link || feedUrl;
-    // Deterministic ID from link → dedup on bulkPut (same link = same id)
-    let hash = 0;
-    for (let i = 0; i < link.length; i++) {
-      hash = ((hash << 5) - hash + link.charCodeAt(i)) | 0;
-    }
-    const id = 'a_' + Math.abs(hash).toString(36) + '_' + btoa(encodeURIComponent(link.slice(0, 80))).replace(/[+/=]/g, '').slice(-12);
+    const id = articleIdFromLink(link);
 
     const rawContent = item.content || '';
     articles.push({

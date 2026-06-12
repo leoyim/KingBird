@@ -22,8 +22,8 @@ export function showNotification(title: string, options?: NotificationOptions): 
 
   navigator.serviceWorker.ready.then((registration) => {
     registration.showNotification(title, {
-      badge: '/ezrss-icon.svg',
-      icon: '/ezrss-icon.svg',
+      badge: '/ezrss-icon.png',
+      icon: '/ezrss-icon.png',
       tag: 'ezrss-new-article',
       requireInteraction: false,
       silent: false,

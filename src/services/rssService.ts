@@ -1,6 +1,7 @@
 import type { Feed, Article } from '@/types';
 import { db } from '@/db/schema';
 import { MAX_ARTICLES_PER_FETCH } from '@/utils/constants';
+import { articleIdFromLink } from '@/utils/articleId';
 
 // Multiple CORS proxies for fallback
 const CORS_PROXIES = [
@@ -52,31 +53,43 @@ interface ParsedItem {
 function getText(el: Element | null, ...tagNames: string[]): string {
   if (!el) return '';
   for (const tag of tagNames) {
+    // Normalize: strip existing CSS escapes, then properly re-escape
+    const normalized = tag.replace(/\\:/g, ':');
+    const escaped = normalized.replace(/:/g, '\\:');
     // Try namespaced selector first (e.g., content\:encoded)
-    const nsMatch = el.querySelector(tag.replace(':', '\\:'));
-    if (nsMatch?.textContent) return nsMatch.textContent.trim();
+    try {
+      const nsMatch = el.querySelector(escaped);
+      if (nsMatch?.textContent) return nsMatch.textContent.trim();
+    } catch {
+      // Ignore invalid selector errors
+    }
     // Try getElementsByTagName for namespaced tags
     try {
-      const byTag = el.getElementsByTagName(tag)[0] as Element | undefined;
+      const byTag = el.getElementsByTagName(normalized)[0] as Element | undefined;
       if (byTag?.textContent) return byTag.textContent.trim();
     } catch {
       // Ignore errors from getElementsByTagName with special chars
     }
     // Try plain selector
-    const plain = el.querySelector(tag.split(':')[1] || tag);
-    if (plain?.textContent && tag.includes(':')) return plain.textContent.trim();
+    const plain = el.querySelector(normalized.split(':')[1] || normalized);
+    if (plain?.textContent && normalized.includes(':')) return plain.textContent.trim();
   }
   return '';
 }
 
 function getAttr(el: Element | null, tag: string, attr: string): string {
   if (!el) return '';
+  // Normalize: strip existing CSS escapes, then properly re-escape
+  const normalized = tag.replace(/\\:/g, ':');
+  const escaped = normalized.replace(/:/g, '\\:');
   // Try namespaced
-  const nsEl = el.querySelector(tag.replace(':', '\\:'));
-  if (nsEl?.getAttribute(attr)) return nsEl.getAttribute(attr)!;
+  try {
+    const nsEl = el.querySelector(escaped);
+    if (nsEl?.getAttribute(attr)) return nsEl.getAttribute(attr)!;
+  } catch { /* ignore */ }
   // Try getElementsByTagName
   try {
-    const byTag = el.getElementsByTagName(tag)[0] as Element | undefined;
+    const byTag = el.getElementsByTagName(normalized)[0] as Element | undefined;
     if (byTag?.getAttribute(attr)) return byTag.getAttribute(attr)!;
   } catch { /* ignore */ }
   return '';
@@ -292,24 +305,6 @@ async function fetchWithProxy(url: string): Promise<string> {
   throw lastError || new Error('All fetch methods failed');
 }
 
-// ---- Deterministic ID from article link for deduplication ----
-
-/**
- * Generate a deterministic, stable ID from an article's URL.
- * Same article (same URL) always produces the same ID → bulkPut becomes upsert.
- */
-function articleIdFromLink(link: string): string {
-  // Simple but effective: use Web Crypto API to produce a short hash of the URL
-  // Fallback for environments where crypto.subtle isn't available in this context
-  let hash = 0;
-  for (let i = 0; i < link.length; i++) {
-    const ch = link.charCodeAt(i);
-    hash = ((hash << 5) - hash + ch) | 0; // hash * 31 + char, keep as int32
-  }
-  // Prepend 'a_' prefix to distinguish article IDs from feed/folder IDs
-  return 'a_' + Math.abs(hash).toString(36) + '_' + btoa(encodeURIComponent(link.slice(0, 80))).slice(0, 20).replace(/[+/=]/g, '').slice(-12);
-}
-
 // ---- Legacy data migration (UUID → deterministic ID) ----
 
 /**
@@ -408,20 +403,27 @@ export async function fetchArticles(feedUrl: string, feedId: string): Promise<Ar
 
 export async function refreshAllFeeds(): Promise<number> {
   const subscriptions = await db.subscriptions.toArray();
-  let newArticlesCount = 0;
 
-  for (const sub of subscriptions) {
-    const feed = await db.feeds.get(sub.feedId);
-    if (feed && feed.isActive) {
-      const existingLinks = new Set(
-        (await db.articles.where('feedId').equals(feed.id).toArray()).map(a => a.link)
-      );
-      const articles = await fetchArticles(feed.url, feed.id);
-      newArticlesCount += articles.filter(a => !existingLinks.has(a.link)).length;
-    }
-  }
+  const results = await Promise.allSettled(
+    subscriptions
+      .filter(sub => sub.isActive !== false) // skip explicitly deactivated
+      .map(async (sub) => {
+        const feed = await db.feeds.get(sub.feedId);
+        if (!feed || !feed.isActive) return 0;
 
-  return newArticlesCount;
+        const existingLinks = new Set(
+          (await db.articles.where('feedId').equals(feed.id).toArray()).map(a => a.link)
+        );
+        const articles = await fetchArticles(feed.url, feed.id);
+        return articles.filter(a => !existingLinks.has(a.link)).length;
+      })
+  );
+
+  return results.reduce((total, r) => {
+    if (r.status === 'fulfilled') return total + r.value;
+    console.warn('[EZRS] Refresh feed failed:', r.reason);
+    return total;
+  }, 0);
 }
 
 export async function detectFeedUrl(url: string): Promise<string[]> {

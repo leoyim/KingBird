@@ -32,7 +32,7 @@ export function ArticleItem({
   return (
     <div
       style={style}
-      className={`px-4 py-3 cursor-pointer transition-all duration-150 border-b border-black/3 dark:border-white/3 ${
+      className={`px-4 py-3 cursor-pointer transition-all duration-150 border-b border-black/3 dark:border-white/3 group ${
         isSelected
           ? 'bg-mac-blue/8 dark:bg-mac-blue/12 border-l-2 border-l-mac-blue'
           : 'hover:bg-black/3 dark:hover:bg-white/3 border-l-2 border-l-transparent'

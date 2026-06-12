@@ -3,11 +3,14 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ArticleList } from '@/components/article/ArticleList';
 import { ReaderView } from '@/components/reader/ReaderView';
 import { AddFeedDialog } from '@/components/subscription/AddFeedDialog';
+import { EditFeedDialog } from '@/components/subscription/EditFeedDialog';
 import { ImportOPMLDialog } from '@/components/subscription/ImportOPMLDialog';
 import { SearchPanel } from '@/components/search/SearchPanel';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useArticleStore } from '@/stores/articleStore';
+import { useTagStore } from '@/stores/tagStore';
+import { useFilterStore } from '@/stores/filterStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
@@ -26,10 +29,14 @@ function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [addFeedOpen, setAddFeedOpen] = useState(false);
   const [importOPMLOpen, setImportOPMLOpen] = useState(false);
+  const [editFeedOpen, setEditFeedOpen] = useState(false);
+  const [editingFeedId, setEditingFeedId] = useState<string | null>(null);
   const selectedArticleId = useArticleStore((s) => s.selectedArticleId);
   const setSelectedArticleId = useArticleStore((s) => s.setSelectedArticleId);
   const { loadAll: loadSubscriptions, selectedFeedId } = useSubscriptionStore();
   const { loadArticles, loadReadStates, articles, markAsRead } = useArticleStore();
+  const { loadAll: loadTags } = useTagStore();
+  const { loadAll: loadFilters } = useFilterStore();
   const searchPanelOpen = useUIStore((s) => s.searchPanelOpen);
   const settingsPanelOpen = useUIStore((s) => s.settingsPanelOpen);
   const toggleSearchPanel = useUIStore((s) => s.toggleSearchPanel);
@@ -44,6 +51,8 @@ function App() {
       await loadSubscriptions();
       await loadArticles();
       await loadReadStates();
+      await loadTags();
+      await loadFilters();
 
       // Build search index
       buildSearchIndex().catch(() => {});
@@ -146,6 +155,8 @@ function App() {
       isRefreshing={isRefreshing}
       onSelectFeed={handleSelectFeed}
       onSelectFolder={handleSelectFolder}
+      onImportOPML={() => setImportOPMLOpen(true)}
+      onEditFeed={(feedId: string) => { setEditingFeedId(feedId); setEditFeedOpen(true); }}
     >
       {/* Article List + Reader View */}
       <ArticleList
@@ -161,6 +172,11 @@ function App() {
       <AddFeedDialog
         open={addFeedOpen}
         onClose={() => setAddFeedOpen(false)}
+      />
+      <EditFeedDialog
+        open={editFeedOpen}
+        feedId={editingFeedId}
+        onClose={() => { setEditFeedOpen(false); setEditingFeedId(null); }}
       />
       <ImportOPMLDialog
         open={importOPMLOpen}

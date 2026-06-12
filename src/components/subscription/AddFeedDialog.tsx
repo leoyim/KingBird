@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
-import { X, Rss, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Rss, Loader2, AlertCircle, CheckCircle2, Plus } from 'lucide-react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useTagStore } from '@/stores/tagStore';
 import { fetchFeedMeta, detectFeedUrl } from '@/services/rssService';
 import { fetchArticles } from '@/services/rssService';
 import type { Feed } from '@/types';
@@ -19,9 +20,12 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
   const [feedPreview, setFeedPreview] = useState<Partial<Feed> | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [newTagName, setNewTagName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { folders, addSubscription } = useSubscriptionStore();
+  const { tags, addTag, addTagToSubscription } = useTagStore();
 
   const handleDetect = async () => {
     if (!url.trim()) return;
@@ -66,6 +70,16 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
       };
       await addSubscription(feed, selectedFolderId);
 
+      // Apply tags to the new subscription
+      if (selectedTagIds.length > 0) {
+        const newSub = useSubscriptionStore.getState().subscriptions.find(s => s.feedId === feed.id);
+        if (newSub) {
+          for (const tagId of selectedTagIds) {
+            await addTagToSubscription(newSub.id, tagId);
+          }
+        }
+      }
+
       // Fetch initial articles
       await fetchArticles(feedUrl, feed.id);
 
@@ -89,6 +103,9 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
     setDetectedFeeds([]);
     setFeedPreview(null);
     setErrorMsg('');
+    setSelectedFolderId(undefined);
+    setSelectedTagIds([]);
+    setNewTagName('');
     onClose();
   };
 
@@ -222,22 +239,98 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
           )}
         </div>
 
-        {/* Folder selector */}
-        {step === 'input' && folders.length > 0 && (
-          <div className="px-5 pb-5">
-            <label className="text-sm font-medium mb-2 block">选择文件夹（可选）</label>
-            <select
-              value={selectedFolderId || ''}
-              onChange={(e) => setSelectedFolderId(e.target.value || undefined)}
-              className="input-mac"
-            >
-              <option value="">无文件夹</option>
-              {folders.map((folder) => (
-                <option key={folder.id} value={folder.id}>
-                  {folder.name}
-                </option>
-              ))}
-            </select>
+        {/* Folder & Tag selectors */}
+        {step === 'input' && (
+          <div className="px-5 pb-5 space-y-3">
+            {folders.length > 0 && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">选择文件夹（可选）</label>
+                <select
+                  value={selectedFolderId || ''}
+                  onChange={(e) => setSelectedFolderId(e.target.value || undefined)}
+                  className="input-mac"
+                >
+                  <option value="">无文件夹</option>
+                  {folders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">选择标签（可选）</label>
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => {
+                    const isSelected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTagIds(prev => prev.filter(id => id !== tag.id));
+                          } else {
+                            setSelectedTagIds(prev => [...prev, tag.id]);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium cursor-pointer transition-all ${
+                          isSelected ? 'ring-1 shadow-sm' : 'opacity-70 hover:opacity-100'
+                        }`}
+                        style={{
+                          backgroundColor: `${tag.color || '#007AFF'}15`,
+                          color: tag.color || '#007AFF',
+                          ...(isSelected ? { borderColor: tag.color || '#007AFF' } : {}),
+                        }}
+                      >
+                        {isSelected && <span className="font-bold">✓</span>}
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {/* Create new tag inline */}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const name = newTagName.trim();
+                  if (!name) return;
+
+                  // Check for duplicate name in current tags
+                  const existing = tags.find(t => t.name === name);
+                  if (existing) {
+                    if (!selectedTagIds.includes(existing.id)) {
+                      setSelectedTagIds(prev => [...prev, existing.id]);
+                    }
+                    setNewTagName('');
+                    return;
+                  }
+
+                  // Create new tag
+                  await addTag(name);
+                  // Find the newly created tag in updated store
+                  const created = useTagStore.getState().tags.find(t => t.name === name);
+                  if (created && !selectedTagIds.includes(created.id)) {
+                    setSelectedTagIds(prev => [...prev, created.id]);
+                  }
+                  setNewTagName('');
+                }}
+                className="flex gap-1 mt-2"
+              >
+                <input
+                  type="text"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  placeholder="+ 新建标签"
+                  className="flex-1 text-xs px-2 py-1 rounded-md border border-black/10 dark:border-white/10 bg-transparent focus:outline-none focus:border-mac-blue/50"
+                  maxLength={20}
+                />
+              </form>
+            </div>
           </div>
         )}
       </div>

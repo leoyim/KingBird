@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import {
   Plus, RefreshCw, Search, Settings, Sun, Moon, Glasses,
-  PanelLeftClose, PanelLeftOpen, FolderOpen
+  PanelLeftClose, PanelLeftOpen, FileUp
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -12,6 +12,7 @@ interface ToolbarProps {
   onRefresh: () => void;
   onToggleSearch: () => void;
   onToggleSettings: () => void;
+  onImportOPML?: () => void;
   isRefreshing: boolean;
 }
 
@@ -20,6 +21,7 @@ export function Toolbar({
   onRefresh,
   onToggleSearch,
   onToggleSettings,
+  onImportOPML,
   isRefreshing,
 }: ToolbarProps) {
   const { theme, eyeCareMode, setTheme } = useTheme();
@@ -52,9 +54,7 @@ export function Toolbar({
         </button>
 
         <div className="flex items-center gap-1.5 ml-1">
-          <div className="w-5 h-5 rounded-md bg-mac-blue flex items-center justify-center">
-            <FolderOpen className="w-3 h-3 text-white" />
-          </div>
+          <img src="/ezrss-icon.png" alt="" className="w-5 h-5 rounded-md object-cover" />
           <span className="text-sm font-semibold tracking-tight">EZRSS</span>
           {unreadCount > 0 && (
             <span className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary bg-mac-blue/10 px-1.5 py-0.5 rounded-full">
@@ -69,14 +69,26 @@ export function Toolbar({
 
       {/* Right section */}
       <div className="flex items-center gap-0.5">
-        <button
-          onClick={onAddFeed}
-          className="btn-mac-ghost h-8 px-2.5 gap-1.5 text-xs"
-          title="添加订阅 (N)"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">添加订阅</span>
-        </button>
+        {/* Grouped: Add Feed + Import OPML */}
+        <div className="flex items-stretch rounded-lg bg-black/5 dark:bg-white/5 overflow-hidden mr-0.5">
+          <button
+            onClick={onAddFeed}
+            className="h-7 w-7 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            title="添加订阅 (N)"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-px bg-black/10 dark:bg-white/10" />
+          {onImportOPML && (
+            <button
+              onClick={onImportOPML}
+              className="h-7 w-7 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              title="导入 OPML"
+            >
+              <FileUp className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
         <button
           onClick={onRefresh}

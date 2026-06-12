@@ -1,10 +1,11 @@
-import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useFilterStore } from '@/stores/filterStore';
 import { exportOPML, exportJSON, importOPML, importJSON } from '@/services/exportService';
 import { db } from '@/db/schema';
 import type { ThemeMode } from '@/types';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -14,6 +15,8 @@ interface SettingsPanelProps {
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const { preferences, setTheme, setEyeCareMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled } = useUIStore();
   const { loadAll } = useSubscriptionStore();
+  const { rules, addRule, removeRule, toggleRule } = useFilterStore();
+  const [newKeyword, setNewKeyword] = useState('');
   const opmlInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
@@ -173,6 +176,87 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             </div>
             <span className="text-sm">新文章推送通知</span>
           </label>
+        </section>
+
+        {/* Keyword filters */}
+        <section className="mb-8">
+          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            关键词过滤
+          </h3>
+          <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary mb-3">
+            设置关键词后，文章列表只显示包含关键词的文章
+          </p>
+
+          {/* Active rules */}
+          {rules.length > 0 && (
+            <div className="space-y-1.5 mb-3">
+              {rules.map((rule) => (
+                <div
+                  key={rule.id}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                    rule.isActive
+                      ? 'border-mac-blue/30 bg-mac-blue/5'
+                      : 'border-black/5 dark:border-white/5 opacity-50'
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleRule(rule.id)}
+                    className="shrink-0"
+                    title={rule.isActive ? '停用' : '启用'}
+                  >
+                    {rule.isActive ? (
+                      <CheckCircle2 className="w-4 h-4 text-mac-blue" />
+                    ) : (
+                      <Circle className="w-4 h-4 text-mac-text-secondary" />
+                    )}
+                  </button>
+                  <span className="text-sm flex-1">{rule.keyword}</span>
+                  <button
+                    onClick={() => removeRule(rule.id)}
+                    className="shrink-0 hover:text-mac-red transition-colors"
+                    title="删除"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add new rule */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const kw = newKeyword.trim();
+              if (!kw) return;
+              const exists = rules.some(r => r.keyword === kw);
+              if (exists) {
+                setNewKeyword('');
+                return;
+              }
+              addRule(kw);
+              setNewKeyword('');
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              placeholder="输入关键词..."
+              className="input-mac flex-1 text-sm"
+              maxLength={50}
+            />
+            <button
+              type="submit"
+              disabled={!newKeyword.trim()}
+              className="btn-mac-primary h-9 px-3"
+              title="添加关键词"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </form>
         </section>
 
         {/* Data export/import */}

@@ -50,6 +50,13 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
     }
   }, [articleId, markAsRead]);
 
+  // Scroll to top when article changes
+  useEffect(() => {
+    if (articleId && contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [articleId]);
+
   // Highlight code blocks after content renders
   useEffect(() => {
     if (article?.content && localReadingMode !== 'bionic') {
@@ -67,12 +74,12 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
       case 'plain':
         return `<div style="white-space: pre-wrap;">${extractPlainText(cleaned)}</div>`;
       case 'bionic':
-        return convertToBionicReading(cleaned);
+        return sanitizeHTML(convertToBionicReading(cleaned));
       case 'original':
       default:
         return sanitizeHTML(cleaned);
     }
-  }, [article?.content, article?.summary, localReadingMode]);
+  }, [article?.id, article?.content, article?.summary, localReadingMode]);
 
   const handleStarToggle = useCallback(() => {
     if (articleId) toggleStar(articleId);

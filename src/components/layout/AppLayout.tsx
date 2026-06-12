@@ -10,6 +10,8 @@ interface AppLayoutProps {
   isRefreshing: boolean;
   onSelectFeed: (feedId: string) => void;
   onSelectFolder: (folderId: string) => void;
+  onEditFeed?: (feedId: string) => void;
+  onImportOPML?: () => void;
 }
 
 export function AppLayout({
@@ -19,6 +21,8 @@ export function AppLayout({
   isRefreshing,
   onSelectFeed,
   onSelectFolder,
+  onEditFeed,
+  onImportOPML,
 }: AppLayoutProps) {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const searchPanelOpen = useUIStore((s) => s.searchPanelOpen);
@@ -34,6 +38,7 @@ export function AppLayout({
         onRefresh={onRefresh}
         onToggleSearch={toggleSearchPanel}
         onToggleSettings={toggleSettingsPanel}
+        onImportOPML={onImportOPML}
         isRefreshing={isRefreshing}
       />
 
@@ -44,6 +49,7 @@ export function AppLayout({
           <Sidebar
             onSelectFeed={onSelectFeed}
             onSelectFolder={onSelectFolder}
+            onEditFeed={onEditFeed}
           />
         )}
 

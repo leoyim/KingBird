@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Feed, Subscription, Article, ArticleReadState, Tag, ArticleTag, Folder, UserPreferences, FilterRule } from '@/types';
+import type { Feed, Subscription, Article, ArticleReadState, Tag, ArticleTag, SubscriptionTag, Folder, UserPreferences, FilterRule } from '@/types';
 import { DEFAULT_PREFERENCES } from '@/types';
 
 export class EZRSSDatabase extends Dexie {
@@ -9,6 +9,7 @@ export class EZRSSDatabase extends Dexie {
   readStates!: Table<ArticleReadState, string>;
   tags!: Table<Tag, string>;
   articleTags!: Table<ArticleTag, [string, string]>;
+  subscriptionTags!: Table<SubscriptionTag, [string, string]>;
   folders!: Table<Folder, string>;
   preferences!: Table<UserPreferences, string>;
   filterRules!: Table<FilterRule, string>;
@@ -28,12 +29,17 @@ export class EZRSSDatabase extends Dexie {
       filterRules: 'id, keyword, isActive',
     });
 
+    this.version(3).stores({
+      subscriptionTags: '[subscriptionId+tagId], subscriptionId, tagId',
+    });
+
     this.feeds = this.table('feeds');
     this.subscriptions = this.table('subscriptions');
     this.articles = this.table('articles');
     this.readStates = this.table('readStates');
     this.tags = this.table('tags');
     this.articleTags = this.table('articleTags');
+    this.subscriptionTags = this.table('subscriptionTags');
     this.folders = this.table('folders');
     this.preferences = this.table('preferences');
     this.filterRules = this.table('filterRules');

@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useArticleStore } from '@/stores/articleStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
+import { useFilterStore } from '@/stores/filterStore';
 import { useUIStore } from '@/stores/uiStore';
 import { ArticleItem } from './ArticleItem';
 import { ArticleSkeleton } from './ArticleSkeleton';
@@ -24,7 +25,8 @@ export function ArticleList({ onSelectArticle, selectedArticleId }: ArticleListP
   } = useArticleStore();
 
   const { selectedFeedId, selectedFolderId, feeds } = useSubscriptionStore();
-  const { preferences } = useUIStore();
+  const { preferences, starredFilter } = useUIStore();
+  const filterRules = useFilterStore((s) => s.rules);
 
   useEffect(() => {
     loadArticles(selectedFeedId || undefined);
@@ -32,14 +34,32 @@ export function ArticleList({ onSelectArticle, selectedArticleId }: ArticleListP
   }, [selectedFeedId, selectedFolderId, loadArticles, loadReadStates]);
 
   const filteredArticles = useMemo(() => {
-    const sorted = [...articles];
+    let sorted = [...articles];
+    if (starredFilter) {
+      sorted = sorted.filter(a => readStates.get(a.id)?.isStarred);
+    }
+    // Apply active keyword filter rules
+    const activeRules = filterRules.filter(r => r.isActive);
+    if (activeRules.length > 0) {
+      sorted = sorted.filter(a => {
+        return activeRules.some(rule => {
+          const keyword = rule.keyword.toLowerCase();
+          return (
+            a.title.toLowerCase().includes(keyword) ||
+            (a.summary || '').toLowerCase().includes(keyword) ||
+            (a.content || '').toLowerCase().includes(keyword) ||
+            (a.author || '').toLowerCase().includes(keyword)
+          );
+        });
+      });
+    }
     if (sortOrder === 'newest') {
       sorted.sort((a, b) => b.publishedAt - a.publishedAt);
     } else {
       sorted.sort((a, b) => a.publishedAt - b.publishedAt);
     }
     return sorted;
-  }, [articles, sortOrder]);
+  }, [articles, sortOrder, starredFilter, readStates, filterRules]);
 
   const { parentRef, virtualizer, virtualItems, totalSize } = useVirtualScroll(
     filteredArticles,

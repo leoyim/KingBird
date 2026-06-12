@@ -53,6 +53,11 @@ export interface ArticleTag {
   tagId: string;
 }
 
+export interface SubscriptionTag {
+  subscriptionId: string;
+  tagId: string;
+}
+
 export interface Folder {
   id: string;
   name: string;
