@@ -7,13 +7,17 @@ interface SearchDocument {
   title: string;
   content: string;
   feedId: string;
+  [x: string]: string;
 }
 
-let searchIndex: FlexSearch.Document<SearchDocument, string[]> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let searchIndex: any = null;
 
-function getIndex(): FlexSearch.Document<SearchDocument, string[]> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getIndex(): any {
   if (!searchIndex) {
-    searchIndex = new FlexSearch.Document<SearchDocument, string[]>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    searchIndex = new (FlexSearch.Document as any)({
       document: {
         id: 'id',
         index: ['title', 'content'],
@@ -56,7 +60,7 @@ export async function search(query: string, limit = 50): Promise<SearchResult[]>
 
   for (const result of results) {
     for (const fieldResult of result.result) {
-      const id = typeof fieldResult === 'string' ? fieldResult : fieldResult;
+      const id = String(fieldResult);
       if (!seen.has(id)) {
         seen.add(id);
         searchResults.push({

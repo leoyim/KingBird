@@ -150,7 +150,7 @@ export async function importAllData(data: {
   tags?: Tag[];
   folders?: Folder[];
 }): Promise<void> {
-  await db.transaction('rw', db.feeds, db.subscriptions, db.articles, db.readStates, db.tags, db.folders, async () => {
+  await db.transaction('rw', [db.feeds, db.subscriptions, db.articles, db.readStates, db.tags, db.folders], async () => {
     if (data.feeds) await db.feeds.bulkPut(data.feeds);
     if (data.subscriptions) await db.subscriptions.bulkPut(data.subscriptions);
     if (data.articles) await db.articles.bulkPut(data.articles);

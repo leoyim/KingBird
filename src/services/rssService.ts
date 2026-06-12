@@ -267,11 +267,11 @@ async function fetchWithProxy(url: string): Promise<string> {
     } else {
       throw new Error(`HTTP ${res.status}`);
     }
-  } catch (directErr) {
+  } catch (directErr: unknown) {
     if (directErr instanceof DOMException && directErr.name === 'AbortError') {
       console.warn(`[EZRSS] Direct fetch timed out for ${url}`);
     } else {
-      console.warn(`[EZRSS] Direct fetch failed: ${directErr.message}`);
+      console.warn(`[EZRSS] Direct fetch failed: ${directErr instanceof Error ? directErr.message : String(directErr)}`);
     }
   }
 
@@ -406,7 +406,6 @@ export async function refreshAllFeeds(): Promise<number> {
 
   const results = await Promise.allSettled(
     subscriptions
-      .filter(sub => sub.isActive !== false) // skip explicitly deactivated
       .map(async (sub) => {
         const feed = await db.feeds.get(sub.feedId);
         if (!feed || !feed.isActive) return 0;

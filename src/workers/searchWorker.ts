@@ -7,6 +7,7 @@ interface SearchDocument {
   title: string;
   content: string;
   feedId: string;
+  [x: string]: string;
 }
 
 interface IndexMessage {
@@ -20,7 +21,8 @@ self.onmessage = async (e: MessageEvent<IndexMessage>) => {
   if (type === 'buildIndex') {
     const articles = await db.articles.toArray();
 
-    const index = new FlexSearch.Document<SearchDocument, string[]>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const index = new (FlexSearch.Document as any)({
       document: {
         id: 'id',
         index: ['title', 'content'],
@@ -45,7 +47,8 @@ self.onmessage = async (e: MessageEvent<IndexMessage>) => {
       articleCount: articles.length,
     });
   } else if (type === 'search' && query) {
-    const index = new FlexSearch.Document<SearchDocument, string[]>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const index = new (FlexSearch.Document as any)({
       document: {
         id: 'id',
         index: ['title', 'content'],
@@ -72,7 +75,7 @@ self.onmessage = async (e: MessageEvent<IndexMessage>) => {
 
     for (const result of results) {
       for (const fieldResult of result.result) {
-        const id = typeof fieldResult === 'string' ? fieldResult : fieldResult;
+        const id = String(fieldResult);
         if (!seen.has(id)) {
           seen.add(id);
           articleIds.push(id);
