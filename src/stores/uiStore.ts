@@ -15,6 +15,7 @@ interface UIState {
 
   setTheme: (theme: ThemeMode) => void;
   setEyeCareMode: (enabled: boolean) => void;
+  setEinkMode: (enabled: boolean) => void;
   setReaderFontSize: (size: number) => void;
   setReadingMode: (mode: ReadingMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
@@ -45,6 +46,7 @@ export const useUIStore = create<UIState>()(
 
       setTheme: (theme) => set((s) => ({ preferences: { ...s.preferences, theme } })),
       setEyeCareMode: (eyeCareMode) => set((s) => ({ preferences: { ...s.preferences, eyeCareMode } })),
+      setEinkMode: (einkMode) => set((s) => ({ preferences: { ...s.preferences, einkMode } })),
       setReaderFontSize: (readerFontSize) => set((s) => ({ preferences: { ...s.preferences, readerFontSize } })),
       setReadingMode: (defaultReadingMode) => set((s) => ({ preferences: { ...s.preferences, defaultReadingMode } })),
       setNotificationsEnabled: (notificationsEnabled) => set((s) => ({ preferences: { ...s.preferences, notificationsEnabled } })),

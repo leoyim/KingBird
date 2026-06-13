@@ -5,6 +5,7 @@ import { useUIStore } from '@/stores/uiStore';
 export function useTheme() {
   const theme = useUIStore((s) => s.preferences.theme);
   const eyeCareMode = useUIStore((s) => s.preferences.eyeCareMode);
+  const einkMode = useUIStore((s) => s.preferences.einkMode);
   const setTheme = useUIStore((s) => s.setTheme);
 
   useEffect(() => {
@@ -37,5 +38,10 @@ export function useTheme() {
     root.classList.toggle('eye-care', eyeCareMode);
   }, [eyeCareMode]);
 
-  return { theme, eyeCareMode, setTheme, isDark: document.documentElement.classList.contains('dark') };
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('eink', einkMode);
+  }, [einkMode]);
+
+  return { theme, eyeCareMode, einkMode, setTheme, isDark: document.documentElement.classList.contains('dark') };
 }

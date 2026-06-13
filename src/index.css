@@ -379,3 +379,149 @@
   background: var(--eye-care-text-secondary);
   opacity: 0.2;
 }
+
+/* ========================================
+   E-Ink Mode (墨水屏模式)
+   High-contrast B&W, no animations, for E-Ink displays
+   ======================================== */
+.eink {
+  filter: grayscale(100%) contrast(1.1);
+}
+
+/* Remove all glass/blur effects */
+.eink .glass-sidebar,
+.eink .glass-toolbar {
+  backdrop-filter: none !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+.eink .card-mac {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-color: #000 !important;
+  background: #fff !important;
+}
+
+/* Disable all animations — E-Ink can't handle motion */
+.eink *,
+.eink *::before,
+.eink *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* High-contrast text */
+.eink .article-content {
+  font-family: "Noto Serif", "Georgia", "Times New Roman", serif;
+  color: #000 !important;
+  background: #fff !important;
+}
+
+.eink .article-content h1,
+.eink .article-content h2,
+.eink .article-content h3,
+.eink .article-content p {
+  color: #000 !important;
+}
+
+.eink .article-content a {
+  color: #000 !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.eink .article-content blockquote {
+  border-left-color: #000 !important;
+  color: #333 !important;
+  background: #f8f8f8 !important;
+}
+
+.eink .article-content img {
+  filter: grayscale(100%);
+}
+
+/* Code blocks: light instead of dark */
+.eink .monaco-block {
+  background: #f8f8f8 !important;
+  border: 1px solid #999 !important;
+}
+
+.eink .monaco-block pre[class*="language-"],
+.eink .monaco-block pre code {
+  background: #f8f8f8 !important;
+  color: #000 !important;
+}
+
+.eink .monaco-block .line-num {
+  color: #999 !important;
+  border-right-color: #ccc !important;
+}
+
+.eink .monaco-block .code-line:hover {
+  background: rgba(0,0,0,0.04) !important;
+}
+
+.eink .monaco-block .code-line:hover .line-num {
+  color: #333 !important;
+}
+
+/* Override token colors for high contrast */
+.eink .token.comment,
+.eink .token.prolog,
+.eink .token.doctype,
+.eink .token.cdata { color: #555 !important; }
+.eink .token.punctuation { color: #000 !important; }
+.eink .token.property,
+.eink .token.tag,
+.eink .token.boolean,
+.eink .token.number,
+.eink .token.constant,
+.eink .token.symbol { color: #000 !important; }
+.eink .token.selector,
+.eink .token.attr-name,
+.eink .token.string,
+.eink .token.char,
+.eink .token.builtin,
+.eink .token.inserted { color: #333 !important; }
+.eink .token.operator,
+.eink .token.entity,
+.eink .token.url { color: #000 !important; }
+.eink .token.atrule,
+.eink .token.attr-value,
+.eink .token.keyword { color: #000 !important; font-weight: bold; }
+.eink .token.function,
+.eink .token.class-name { color: #000 !important; font-weight: bold; }
+.eink .token.regex,
+.eink .token.important { color: #000 !important; }
+.eink .token.variable,
+.eink .token.parameter { color: #333 !important; }
+.eink .token.namespace { opacity: 1 !important; }
+.eink .token.deleted,
+.eink .token.inserted { text-decoration: underline; }
+
+/* Buttons & inputs */
+.eink .btn-mac,
+.eink .btn-mac-ghost {
+  color: #000 !important;
+  background: #f0f0f0 !important;
+  border: 1px solid #999 !important;
+}
+
+.eink .btn-mac-primary {
+  color: #fff !important;
+  background: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+.eink .input-mac {
+  background: #fff !important;
+  color: #000 !important;
+  border-color: #999 !important;
+}
+
+.eink ::-webkit-scrollbar-thumb {
+  background: #999 !important;
+}

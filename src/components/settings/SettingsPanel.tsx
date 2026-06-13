@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle } from 'lucide-react';
+import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -40,7 +40,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
-  const { preferences, setTheme, setEyeCareMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled, setHighlightColor } = useUIStore();
+  const { preferences, setTheme, setEyeCareMode, setEinkMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled, setHighlightColor } = useUIStore();
   const { loadAll } = useSubscriptionStore();
   const { rules, addRule, removeRule, toggleRule } = useFilterStore();
   const [newKeyword, setNewKeyword] = useState('');
@@ -208,6 +208,29 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             <span className="text-sm flex items-center gap-2">
               <Glasses className="w-4 h-4 text-amber-600" />
               启用护眼模式（暖色背景，减轻眼部疲劳）
+            </span>
+          </label>
+        </section>
+
+        {/* E-ink mode */}
+        <section className="mb-8">
+          <h3 className="text-sm font-medium mb-3">墨水屏模式</h3>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div
+              className={`w-10 h-6 rounded-full transition-colors relative ${
+                preferences.einkMode ? 'bg-gray-700' : 'bg-black/10 dark:bg-white/10'
+              }`}
+              onClick={() => setEinkMode(!preferences.einkMode)}
+            >
+              <div
+                className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform ${
+                  preferences.einkMode ? 'translate-x-5' : 'translate-x-1'
+                }`}
+              />
+            </div>
+            <span className="text-sm flex items-center gap-2">
+              <MonitorOff className="w-4 h-4 text-gray-600" />
+              启用墨水屏模式（黑白高对比、去动画、适合 E-Ink 显示器）
             </span>
           </label>
         </section>
