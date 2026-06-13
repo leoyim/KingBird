@@ -421,7 +421,6 @@ export async function fetchArticles(feedUrl: string, feedId: string): Promise<{ 
       title: item.title || '无标题',
       summary,
       content,
-      originalContent: content,
       link,
       author: item.author || '',
       publishedAt: parseDate(item.isoDate),

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ThemeMode, LayoutMode, ReadingMode, UserPreferences } from '@/types';
+import type { ThemeMode, ReadingMode, UserPreferences } from '@/types';
 import { DEFAULT_PREFERENCES } from '@/types';
 
 interface UIState {
@@ -15,7 +15,6 @@ interface UIState {
 
   setTheme: (theme: ThemeMode) => void;
   setEyeCareMode: (enabled: boolean) => void;
-  setLayout: (layout: LayoutMode) => void;
   setReaderFontSize: (size: number) => void;
   setReadingMode: (mode: ReadingMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
@@ -46,7 +45,6 @@ export const useUIStore = create<UIState>()(
 
       setTheme: (theme) => set((s) => ({ preferences: { ...s.preferences, theme } })),
       setEyeCareMode: (eyeCareMode) => set((s) => ({ preferences: { ...s.preferences, eyeCareMode } })),
-      setLayout: (layout) => set((s) => ({ preferences: { ...s.preferences, layout } })),
       setReaderFontSize: (readerFontSize) => set((s) => ({ preferences: { ...s.preferences, readerFontSize } })),
       setReadingMode: (defaultReadingMode) => set((s) => ({ preferences: { ...s.preferences, defaultReadingMode } })),
       setNotificationsEnabled: (notificationsEnabled) => set((s) => ({ preferences: { ...s.preferences, notificationsEnabled } })),

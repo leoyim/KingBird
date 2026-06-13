@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useUIStore } from '@/stores/uiStore';
 
 interface ShortcutHandler {
   key: string;
@@ -35,8 +34,4 @@ export function useKeyboardShortcuts(shortcuts: ShortcutHandler[]) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [shortcuts]);
-
-  const { preferences } = useUIStore();
-
-  return { shortcuts: preferences.keyboardShortcuts };
 }

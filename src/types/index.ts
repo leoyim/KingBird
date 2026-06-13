@@ -19,7 +19,6 @@ export interface Subscription {
   feedId: string;
   folderId?: string;
   sortOrder: number;
-  customTitle?: string;
   updateInterval: number;
   createdAt: number;
   /** 是否参与定时自动刷新，默认 true */
@@ -32,7 +31,6 @@ export interface Article {
   title: string;
   summary?: string;
   content?: string;
-  originalContent?: string;
   link: string;
   author?: string;
   publishedAt: number;
@@ -72,25 +70,16 @@ export interface Folder {
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type LayoutMode = 'list' | 'grid';
 export type ReadingMode = 'original' | 'plain' | 'bionic';
 export type RefreshStatus = 'pending' | 'success' | 'failure';
-
-export interface FeedRefreshState {
-  feedId: string;
-  status: RefreshStatus;
-  timestamp: number;
-}
 
 export interface UserPreferences {
   id: string;
   theme: ThemeMode;
   eyeCareMode: boolean;
   readerFontSize: number;
-  layout: LayoutMode;
   defaultReadingMode: ReadingMode;
   highlightColor: string;
-  keyboardShortcuts: Record<string, string>;
   notificationsEnabled: boolean;
   autoRefreshInterval: number;
 }
@@ -98,13 +87,11 @@ export interface UserPreferences {
 export interface SearchResult {
   articleId: string;
   score: number;
-  highlights?: string[];
 }
 
 export interface FilterRule {
   id: string;
   keyword: string;
-  feedIds?: string[];
   isActive: boolean;
   createdAt: number;
 }
@@ -114,22 +101,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'system',
   eyeCareMode: false,
   readerFontSize: 16,
-  layout: 'list',
   defaultReadingMode: 'original',
   highlightColor: '#007AFF',
-  keyboardShortcuts: {
-    'j': 'nextArticle',
-    'k': 'prevArticle',
-    'h': 'parentFolder',
-    'l': 'childFolder',
-    's': 'toggleStar',
-    'm': 'toggleRead',
-    'r': 'refresh',
-    'n': 'addSubscription',
-    '/': 'focusSearch',
-    'v': 'openOriginal',
-    'escape': 'closePanel',
-  },
   notificationsEnabled: true,
   autoRefreshInterval: 30,
 };

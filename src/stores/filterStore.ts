@@ -7,10 +7,10 @@ interface FilterState {
   isLoading: boolean;
 
   loadAll: () => Promise<void>;
-  addRule: (keyword: string, feedIds?: string[]) => Promise<void>;
+  addRule: (keyword: string) => Promise<void>;
   removeRule: (id: string) => Promise<void>;
   toggleRule: (id: string) => Promise<void>;
-  updateRule: (id: string, updates: Partial<Pick<FilterRule, 'keyword' | 'feedIds' | 'isActive'>>) => Promise<void>;
+  updateRule: (id: string, updates: Partial<Pick<FilterRule, 'keyword' | 'isActive'>>) => Promise<void>;
   getActiveRules: () => FilterRule[];
 }
 
@@ -23,11 +23,10 @@ export const useFilterStore = create<FilterState>((set, get) => ({
     set({ rules });
   },
 
-  addRule: async (keyword, feedIds) => {
+  addRule: async (keyword) => {
     const rule: FilterRule = {
       id: crypto.randomUUID(),
       keyword: keyword.trim(),
-      feedIds,
       isActive: true,
       createdAt: Date.now(),
     };

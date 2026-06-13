@@ -7,10 +7,6 @@ import 'prismjs/components/prism-go';
 import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
-import 'prismjs/components/prism-csharp';
-import 'prismjs/components/prism-ruby';
-import 'prismjs/components/prism-swift';
-import 'prismjs/components/prism-kotlin';
 import 'prismjs/components/prism-sql';
 import 'prismjs/components/prism-yaml';
 import 'prismjs/components/prism-json';
@@ -130,13 +126,6 @@ export const SUPPORTED_LANGUAGES: Record<string, string> = {
   'java': 'Java',
   'c': 'C',
   'cpp': 'C++',
-  'csharp': 'C#',
-  'cs': 'C#',
-  'rb': 'Ruby',
-  'ruby': 'Ruby',
-  'swift': 'Swift',
-  'kt': 'Kotlin',
-  'kotlin': 'Kotlin',
   'sql': 'SQL',
   'yaml': 'YAML',
   'yml': 'YAML',
@@ -147,5 +136,4 @@ export const SUPPORTED_LANGUAGES: Record<string, string> = {
   'sh': 'Bash',
   'shell': 'Bash',
   'css': 'CSS',
-  'scss': 'SCSS',
 };
