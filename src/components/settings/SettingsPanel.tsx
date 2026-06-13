@@ -103,12 +103,24 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="max-w-lg mx-auto px-6 py-8">
-        <h2 className="text-lg font-semibold mb-6">设置</h2>
+      <div className="max-w-lg mx-auto">
+        {/* Sticky header with close button */}
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white/70 dark:bg-mac-bg-dark/70 backdrop-blur-md border-b border-black/5 dark:border-white/5">
+          <h2 className="text-lg font-semibold">设置</h2>
+          <button
+            onClick={onClose}
+            className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            title="关闭设置"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Theme */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">外观</h3>
+        <div className="px-6 py-6 space-y-6">
+
+        {/* Theme & Display */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">外观</h3>
           <div className="flex gap-2">
             {themeOptions.map(({ value, label, icon }) => (
               <button
@@ -127,33 +139,124 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           </div>
         </section>
 
-        {/* Highlight color */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">高亮色</h3>
-          <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary mb-4">
-            选择文章和订阅选中时的高亮颜色
-          </p>
+        {/* Reading modes */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">阅读模式</h3>
+          <div className="space-y-4">
+            {/* Eye-care */}
+            <label className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-2">
+                <Glasses className="w-4 h-4 text-amber-600" />
+                <span className="text-sm">护眼模式</span>
+              </div>
+              <div
+                className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                  preferences.eyeCareMode ? 'bg-amber-500' : 'bg-black/10 dark:bg-white/10'
+                }`}
+                onClick={() => setEyeCareMode(!preferences.eyeCareMode)}
+              >
+                <div
+                  className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
+                    preferences.eyeCareMode ? 'translate-x-[18px]' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+            </label>
 
-          {/* Color swatch component */}
+            {/* E-ink */}
+            <label className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-2">
+                <MonitorOff className="w-4 h-4 text-gray-600" />
+                <span className="text-sm">墨水屏模式</span>
+              </div>
+              <div
+                className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                  preferences.einkMode ? 'bg-gray-700' : 'bg-black/10 dark:bg-white/10'
+                }`}
+                onClick={() => setEinkMode(!preferences.einkMode)}
+              >
+                <div
+                  className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
+                    preferences.einkMode ? 'translate-x-[18px]' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+            </label>
+          </div>
+        </section>
+
+        {/* Font size */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">阅读字体</h3>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setReaderFontSize(Math.max(12, preferences.readerFontSize - 1))}
+              className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-sm font-bold"
+            >
+              A-
+            </button>
+            <span className="text-sm tabular-nums font-medium">{preferences.readerFontSize}px</span>
+            <button
+              onClick={() => setReaderFontSize(Math.min(24, preferences.readerFontSize + 1))}
+              className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-sm font-bold"
+            >
+              A+
+            </button>
+          </div>
+        </section>
+
+        {/* Auto refresh */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">自动刷新</h3>
+          <select
+            value={preferences.autoRefreshInterval}
+            onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+            className="input-mac"
+          >
+            <option value={0}>手动刷新</option>
+            <option value={15}>每 15 分钟</option>
+            <option value={30}>每 30 分钟</option>
+            <option value={60}>每 1 小时</option>
+            <option value={180}>每 3 小时</option>
+          </select>
+        </section>
+
+        {/* Notifications */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">推送通知</h3>
+          <label className="flex items-center justify-between cursor-pointer">
+            <span className="text-sm">新文章推送通知</span>
+            <div
+              className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${
+                preferences.notificationsEnabled ? 'bg-mac-blue' : 'bg-black/10 dark:bg-white/10'
+              }`}
+              onClick={() => setNotificationsEnabled(!preferences.notificationsEnabled)}
+            >
+              <div
+                className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-0.5 transition-transform ${
+                  preferences.notificationsEnabled ? 'translate-x-[18px]' : 'translate-x-0.5'
+                }`}
+              />
+            </div>
+          </label>
+        </section>
+
+        {/* Highlight color */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-4">高亮色</h3>
           <ColorSwatchGroup
             title="传统中国色"
             colors={CHINESE_COLORS}
             selectedHex={preferences.highlightColor}
             onSelect={setHighlightColor}
           />
-
           <ColorSwatchGroup
             title="现代流行色"
             colors={MODERN_COLORS}
             selectedHex={preferences.highlightColor}
             onSelect={setHighlightColor}
           />
-
-          {/* Custom hex input */}
-          <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/5">
-            <label className="text-[11px] font-medium text-mac-text-secondary dark:text-mac-text-dark-secondary mb-1.5 block">
-              自定义色值
-            </label>
+          <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/5">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -189,119 +292,12 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           </div>
         </section>
 
-        {/* Eye-care mode */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">护眼模式</h3>
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div
-              className={`w-10 h-6 rounded-full transition-colors relative ${
-                preferences.eyeCareMode ? 'bg-amber-500' : 'bg-black/10 dark:bg-white/10'
-              }`}
-              onClick={() => setEyeCareMode(!preferences.eyeCareMode)}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform ${
-                  preferences.eyeCareMode ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </div>
-            <span className="text-sm flex items-center gap-2">
-              <Glasses className="w-4 h-4 text-amber-600" />
-              启用护眼模式（暖色背景，减轻眼部疲劳）
-            </span>
-          </label>
-        </section>
-
-        {/* E-ink mode */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">墨水屏模式</h3>
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div
-              className={`w-10 h-6 rounded-full transition-colors relative ${
-                preferences.einkMode ? 'bg-gray-700' : 'bg-black/10 dark:bg-white/10'
-              }`}
-              onClick={() => setEinkMode(!preferences.einkMode)}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform ${
-                  preferences.einkMode ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </div>
-            <span className="text-sm flex items-center gap-2">
-              <MonitorOff className="w-4 h-4 text-gray-600" />
-              启用墨水屏模式（黑白高对比、去动画、适合 E-Ink 显示器）
-            </span>
-          </label>
-        </section>
-
-        {/* Reader font size */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">阅读字体大小</h3>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setReaderFontSize(Math.max(12, preferences.readerFontSize - 1))}
-              className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-sm font-bold"
-            >
-              A-
-            </button>
-            <span className="text-sm tabular-nums w-16 text-center">{preferences.readerFontSize}px</span>
-            <button
-              onClick={() => setReaderFontSize(Math.min(24, preferences.readerFontSize + 1))}
-              className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-sm font-bold"
-            >
-              A+
-            </button>
-          </div>
-        </section>
-
-        {/* Auto refresh */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">自动刷新</h3>
-          <select
-            value={preferences.autoRefreshInterval}
-            onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
-            className="input-mac"
-          >
-            <option value={0}>手动刷新</option>
-            <option value={15}>每 15 分钟</option>
-            <option value={30}>每 30 分钟</option>
-            <option value={60}>每 1 小时</option>
-            <option value={180}>每 3 小时</option>
-          </select>
-        </section>
-
-        {/* Notifications */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">推送通知</h3>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              className={`w-10 h-6 rounded-full transition-colors relative ${
-                preferences.notificationsEnabled ? 'bg-mac-blue' : 'bg-black/10 dark:bg-white/10'
-              }`}
-              onClick={() => setNotificationsEnabled(!preferences.notificationsEnabled)}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform ${
-                  preferences.notificationsEnabled ? 'translate-x-5' : 'translate-x-1'
-                }`}
-              />
-            </div>
-            <span className="text-sm">新文章推送通知</span>
-          </label>
-        </section>
-
         {/* Keyword filters */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-            <Filter className="w-4 h-4" />
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-3 flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5" />
             关键词过滤
           </h3>
-          <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary mb-3">
-            设置关键词后，文章列表只显示包含关键词的文章
-          </p>
-
-          {/* Active rules */}
           {rules.length > 0 && (
             <div className="space-y-1.5 mb-3">
               {rules.map((rule) => (
@@ -336,8 +332,6 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               ))}
             </div>
           )}
-
-          {/* Add new rule */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -372,56 +366,38 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
           </form>
         </section>
 
-        {/* Data export/import */}
-        <section className="mb-8">
-          <h3 className="text-sm font-medium mb-3">数据管理</h3>
+        {/* Data management */}
+        <section className="card-mac p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mb-3">数据管理</h3>
           <div className="space-y-2">
             <div className="flex gap-2">
-              <button onClick={handleExportOPML} className="btn-mac-ghost gap-2 flex-1 justify-center">
-                <Download className="w-4 h-4" />
+              <button onClick={handleExportOPML} className="btn-mac-ghost gap-2 flex-1 justify-center text-xs">
+                <Download className="w-3.5 h-3.5" />
                 导出 OPML
               </button>
-              <button onClick={handleExportJSON} className="btn-mac-ghost gap-2 flex-1 justify-center">
-                <Download className="w-4 h-4" />
+              <button onClick={handleExportJSON} className="btn-mac-ghost gap-2 flex-1 justify-center text-xs">
+                <Download className="w-3.5 h-3.5" />
                 导出 JSON
               </button>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => opmlInputRef.current?.click()}
-                className="btn-mac-ghost gap-2 flex-1 justify-center"
-              >
-                <Upload className="w-4 h-4" />
+              <button onClick={() => opmlInputRef.current?.click()} className="btn-mac-ghost gap-2 flex-1 justify-center text-xs">
+                <Upload className="w-3.5 h-3.5" />
                 导入 OPML
               </button>
-              <button
-                onClick={() => jsonInputRef.current?.click()}
-                className="btn-mac-ghost gap-2 flex-1 justify-center"
-              >
-                <Upload className="w-4 h-4" />
+              <button onClick={() => jsonInputRef.current?.click()} className="btn-mac-ghost gap-2 flex-1 justify-center text-xs">
+                <Upload className="w-3.5 h-3.5" />
                 导入 JSON
               </button>
             </div>
-            <input
-              ref={opmlInputRef}
-              type="file"
-              accept=".opml,.xml"
-              className="hidden"
-              onChange={handleImportOPML}
-            />
-            <input
-              ref={jsonInputRef}
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImportJSON}
-            />
           </div>
+          <input ref={opmlInputRef} type="file" accept=".opml,.xml" className="hidden" onChange={handleImportOPML} />
+          <input ref={jsonInputRef} type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
         </section>
 
         {/* Danger zone */}
-        <section>
-          <h3 className="text-sm font-medium mb-3 text-mac-red">危险操作</h3>
+        <section className="card-mac p-4 border-mac-red/20">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-mac-red mb-3">危险操作</h3>
           <button
             onClick={handleClearData}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-mac-red border border-mac-red/20 hover:bg-mac-red/5 transition-colors"
@@ -430,6 +406,8 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             清除所有数据
           </button>
         </section>
+
+        </div>
       </div>
     </div>
   );
