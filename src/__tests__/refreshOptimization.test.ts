@@ -101,7 +101,7 @@ vi.stubGlobal('fetch', vi.fn(async (url: unknown, opts?: RequestInit) => {
 
   // Check for conditional request — return 304 if ETag matches
   if (headers['If-None-Match'] || headers['If-Modified-Since']) {
-    return { ok: false, status: 304, headers: new Map(), text: async () => '' };
+    return { ok: false, status: 304, headers: new Map(), text: async (): Promise<string> => '' };
   }
 
   const idx = fetchState.callIndex++;
@@ -175,14 +175,14 @@ describe('基础数据流验证', () => {
   it('fetchArticles 返回文章并更新 ETag', async () => {
     await seedFeeds(1, Date.now() - 86400000);
     const { db } = await import('@/db/schema');
-    const feed = await db.feeds.get('feed-0') as Record<string, unknown>;
-    const { articles, notModified } = await fetchArticles((feed as Record<string, unknown>).url as string, 'feed-0');
+    const feed = await db.feeds.get('feed-0') as unknown as Record<string, unknown>;
+    const { articles, notModified } = await fetchArticles(feed.url as string, 'feed-0');
     expect(notModified).toBe(false);
     expect(articles.length).toBeGreaterThan(0);
     expect(articles[0].title).toBe('Test Article 0');
     // ETag should have been saved
-    const updated = await db.feeds.get('feed-0') as Record<string, unknown>;
-    expect((updated as Record<string, unknown>).eTag).toBeDefined();
+    const updated = await db.feeds.get('feed-0') as unknown as Record<string, unknown>;
+    expect(updated.eTag).toBeDefined();
   });
 });
 
@@ -246,7 +246,7 @@ describe('按 lastFetchedAt 排序', () => {
     const origFetch = fetch;
     vi.stubGlobal('fetch', vi.fn(async (url: unknown, opts?: RequestInit) => {
       callOrder.push(url as string);
-      return origFetch(url, opts);
+      return (origFetch as Function)(url as string, opts);
     }));
 
     await refreshAllFeeds();
@@ -282,8 +282,8 @@ describe('ETag 头保存', () => {
     await seedFeeds(1, Date.now() - 86400000);
     await refreshAllFeeds();
     const { db } = await import('@/db/schema');
-    const feed = await db.feeds.get('feed-0') as Record<string, unknown>;
+    const feed = await db.feeds.get('feed-0') as unknown as Record<string, unknown>;
     expect(feed).toBeDefined();
-    expect((feed as Record<string, unknown>).eTag).toBeDefined();
+    expect(feed.eTag).toBeDefined();
   });
 });
