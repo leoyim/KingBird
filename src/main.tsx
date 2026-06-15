@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 
+console.log(`[EZRSS] version: ${import.meta.env.VITE_APP_VERSION}`);
+
 // Register Service Worker for offline support (production only)
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

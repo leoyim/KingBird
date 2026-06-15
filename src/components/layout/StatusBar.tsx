@@ -1,4 +1,4 @@
-import { Wifi, WifiOff, Clock } from 'lucide-react';
+import { Wifi, WifiOff, Clock, GitCommitHorizontal } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { formatRelativeTime } from '@/utils/dateFormatter';
@@ -42,6 +42,11 @@ export function StatusBar() {
               <span className="text-mac-orange">离线</span>
             </>
           )}
+        </div>
+
+        <div className="flex items-center gap-1">
+          <GitCommitHorizontal className="w-3 h-3" />
+          <span>{import.meta.env.VITE_APP_VERSION}</span>
         </div>
       </div>
     </footer>
