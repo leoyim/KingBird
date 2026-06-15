@@ -1,56 +1,48 @@
 // Service Worker for offline caching
-const CACHE_NAME = 'ezrss-v3';
-const ASSET_CACHE = 'ezrss-assets-v3';
+const CACHE_NAME = 'ezrss-v4';
+const ASSET_CACHE = 'ezrss-assets-v4';
 
-// App shell - minimum required for offline startup
-const APP_SHELL = [
-  '/',
-  '/index.html',
-];
+// App shell — minimum required for offline startup
+const APP_SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== ASSET_CACHE)
-          .map((name) => caches.delete(name))
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((k) => k !== CACHE_NAME && k !== ASSET_CACHE)
+          .map((k) => caches.delete(k))
+      )
+    )
   );
   self.clients.claim();
-  // Notify all clients to refresh on SW update
   self.clients.matchAll().then((clients) => {
     clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
   });
-});
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Skip non-GET requests and browser extensions
   if (request.method !== 'GET') return;
   if (request.url.startsWith('chrome-extension://')) return;
-  if (request.url.includes('/api/')) return; // Don't cache API calls
-  // Skip caching in dev mode (localhost)
-  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') return;
+  if (request.url.includes('/api/')) return;
+  // Skip caching in dev mode (localhost / 0.0.0.0)
+  if (['localhost', '127.0.0.1', '0.0.0.0'].includes(self.location.hostname)) return;
 
-  // For navigation requests, serve index.html (SPA)
+  // Navigation requests → serve cached index.html (SPA fallback)
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.match('/index.html').then((cached) => {
         return cached || fetch(request).catch(() => {
-          return new Response('Offline - 未能加载此页面', {
+          return new Response('Offline', {
             status: 503,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
           });
@@ -60,26 +52,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first, then network
+  // Static assets → cache-first, then network
   const isAsset = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf)$/.test(request.url);
   const cacheTarget = isAsset ? ASSET_CACHE : CACHE_NAME;
 
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-
       return fetch(request).then((response) => {
         if (response.status === 200) {
           const clone = response.clone();
-          caches.open(cacheTarget).then((cache) => {
-            cache.put(request, clone);
-          });
+          caches.open(cacheTarget).then((c) => c.put(request, clone));
         }
         return response;
       }).catch(() => {
-        if (isAsset) {
-          return new Response('', { status: 503 });
-        }
+        if (isAsset) return new Response('', { status: 503 });
         throw new Error('network-error');
       });
     })
@@ -88,10 +75,7 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   const urlToOpen = event.notification.data?.url || '/';
-
-  // Only allow same-origin URLs
   const isSameOrigin = urlToOpen.startsWith('/') && !urlToOpen.startsWith('//');
   const target = isSameOrigin ? urlToOpen : '/';
 
