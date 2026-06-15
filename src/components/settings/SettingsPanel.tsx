@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Palette, Bell } from 'lucide-react';
+import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Palette, Bell, Database } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -11,7 +11,6 @@ import { useRef, useState } from 'react';
 
 const TABS = [
   { id: 'display', label: '显示', icon: <Monitor className="w-3.5 h-3.5" /> },
-  { id: 'color', label: '色彩', icon: <Palette className="w-3.5 h-3.5" /> },
   { id: 'features', label: '功能', icon: <RefreshCw className="w-3.5 h-3.5" /> },
   { id: 'data', label: '数据', icon: <Download className="w-3.5 h-3.5" /> },
 ] as const;
@@ -83,8 +82,8 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in flex items-center justify-center p-4">
-      <div className="w-full max-w-lg card-mac overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }}>
+    <div className="fixed inset-0 z-[60] bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-lg card-mac overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-black/5 dark:border-white/5 shrink-0">
           <h2 className="text-base font-semibold">设置</h2>
@@ -164,21 +163,19 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   <button onClick={() => setReaderFontSize(Math.min(24, preferences.readerFontSize + 1))} className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-sm font-bold">A+</button>
                 </div>
               </div>
-            </div>
-          )}
 
-          {activeTab === 'color' && (
-            <div className="space-y-4">
-              <ColorSwatchGroup title="传统中国色" colors={CHINESE_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
-              <ColorSwatchGroup title="现代流行色" colors={MODERN_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
-              <div className="pt-3 border-t border-black/5 dark:border-white/5">
+              {/* Highlight color */}
+              <div>
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2">高亮色</h3>
+                <ColorSwatchGroup title="传统中国色" colors={CHINESE_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
+                <ColorSwatchGroup title="现代流行色" colors={MODERN_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     const hex = customHex.trim();
                     if (/^#[0-9a-fA-F]{6}$/.test(hex)) { setHighlightColor(hex); setCustomHex(''); }
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 mt-2 pt-2 border-t border-black/5 dark:border-white/5"
                 >
                   <div className="w-7 h-7 rounded-md border border-black/10 dark:border-white/10 shrink-0" style={{ backgroundColor: preferences.highlightColor }} />
                   <input type="text" value={customHex} onChange={(e) => setCustomHex(e.target.value)} placeholder="#FF461F" className="input-mac flex-1 h-8 text-xs font-mono" maxLength={7} />
@@ -252,6 +249,35 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
           {activeTab === 'data' && (
             <div className="space-y-4">
+              {/* Storage info */}
+              <div>
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2 flex items-center gap-1.5">
+                  <Database className="w-3 h-3" />
+                  数据存储
+                </h3>
+                <div className="rounded-lg bg-black/[0.03] dark:bg-white/[0.03] p-3 space-y-1.5 text-xs text-mac-text-secondary">
+                  <div className="flex justify-between">
+                    <span>存储引擎</span>
+                    <span className="font-medium text-mac-text dark:text-mac-text-dark">IndexedDB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>数据库</span>
+                    <span className="font-medium text-mac-text dark:text-mac-text-dark">EZRSS</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>存储位置</span>
+                    <span className="font-medium text-mac-text dark:text-mac-text-dark">浏览器本地</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>离线可用</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">是</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-mac-text-secondary/50 mt-1.5 leading-relaxed">
+                  数据存储在浏览器 IndexedDB 中，关闭浏览器或重启系统不会丢失。若清除浏览器数据或卸载 PWA，所有数据将被删除。建议定期导出备份。
+                </p>
+              </div>
+
               {/* Export/Import */}
               <div>
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2">导入导出</h3>
@@ -302,14 +328,15 @@ function ColorSwatchGroup({ title, colors, selectedHex, onSelect }: { title: str
               key={hex}
               onClick={() => onSelect(hex)}
               title={label}
-              className={`group relative w-9 h-9 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center ${isSelected ? 'scale-110' : 'hover:scale-105'}`}
+              className={`group relative w-9 h-9 rounded-lg transition-all duration-150 cursor-pointer flex items-center justify-center ${
+                isSelected ? 'scale-110 shadow-md border-2 border-white dark:border-black/70' : 'hover:scale-105'
+              }`}
               style={{ backgroundColor: hex }}
             >
               <span className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[10px] font-medium text-white bg-black/70 backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">{label}</span>
               {isSelected && (
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               )}
-              {isSelected && <span className="absolute -inset-[3px] rounded-xl ring-2 ring-offset-1 ring-current opacity-40 pointer-events-none" style={{ color: hex }} />}
             </button>
           );
         })}

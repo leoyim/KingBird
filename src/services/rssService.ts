@@ -2,6 +2,7 @@ import type { Feed, Article } from '@/types';
 import { db } from '@/db/schema';
 import { MAX_ARTICLES_PER_FETCH } from '@/utils/constants';
 import { articleIdFromLink } from '@/utils/articleId';
+import { sanitizeHTML } from '@/utils/htmlSanitizer';
 
 // Multiple CORS proxies for fallback
 const CORS_PROXIES = [
@@ -12,13 +13,6 @@ const CORS_PROXIES = [
 
 function generateId(): string {
   return crypto.randomUUID();
-}
-
-function sanitizeHTML(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/ on\w+="[^"]*"/gi, '')
-    .replace(/ on\w+='[^']*'/gi, '');
 }
 
 function extractImageFromContent(content: string): string | undefined {

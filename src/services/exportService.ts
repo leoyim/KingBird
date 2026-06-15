@@ -1,6 +1,19 @@
 import type { Feed, Subscription, Folder } from '@/types';
 import { db } from '@/db/schema';
 
+const MAX_IMPORT_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FEEDS_IMPORT = 500;
+const MAX_ARTICLES_IMPORT = 10000;
+
+function isValidHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export interface OPMLOutline {
   title?: string;
   text?: string;
@@ -78,6 +91,7 @@ export async function importOPML(file: File): Promise<{ feeds: number; folders: 
 
   for (const outline of flat) {
     if (!outline.xmlUrl || existingUrls.has(outline.xmlUrl)) continue;
+    if (!isValidHttpUrl(outline.xmlUrl)) continue;
 
     const feedId = crypto.randomUUID();
     const feed: Feed = {
@@ -157,8 +171,38 @@ export async function exportJSON(): Promise<string> {
 }
 
 export async function importJSON(file: File): Promise<{ feeds: number; articles: number }> {
+  if (file.size > MAX_IMPORT_SIZE) {
+    throw new Error('文件大小不能超过 5MB');
+  }
+
   const text = await file.text();
   const data = JSON.parse(text);
+
+  if (!data || typeof data !== 'object') {
+    throw new Error('无效的 JSON 格式');
+  }
+
+  if (!Array.isArray(data.feeds)) {
+    throw new Error('缺少 feeds 数组');
+  }
+
+  if (data.feeds.length > MAX_FEEDS_IMPORT) {
+    throw new Error(`订阅源数量不能超过 ${MAX_FEEDS_IMPORT}`);
+  }
+
+  if (Array.isArray(data.articles) && data.articles.length > MAX_ARTICLES_IMPORT) {
+    throw new Error(`文章数量不能超过 ${MAX_ARTICLES_IMPORT}`);
+  }
+
+  // Validate feed objects have required fields
+  for (const feed of data.feeds) {
+    if (!feed.id || !feed.url || !feed.title) {
+      throw new Error('订阅源数据格式不正确：缺少必需字段 (id, url, title)');
+    }
+    if (!isValidHttpUrl(feed.url)) {
+      throw new Error(`无效的订阅源 URL: ${feed.url}`);
+    }
+  }
 
   const module = await import('@/services/storageService');
   await module.importAllData(data);

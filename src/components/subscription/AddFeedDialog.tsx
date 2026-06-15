@@ -32,6 +32,21 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
     setStep('detecting');
 
     const trimmed = url.trim();
+
+    // Validate URL scheme
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        setErrorMsg('仅支持 http 和 https 协议的 URL');
+        setStep('error');
+        return;
+      }
+    } catch {
+      setErrorMsg('请输入有效的 URL');
+      setStep('error');
+      return;
+    }
+
     const isDirectFeed = trimmed.endsWith('.xml') || trimmed.endsWith('.rss') || trimmed.includes('/feed') || trimmed.includes('/rss');
 
     if (isDirectFeed) {

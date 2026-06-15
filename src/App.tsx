@@ -148,7 +148,7 @@ function App() {
     { key: 'v', handler: () => {
       if (selectedArticleId) {
         const article = useArticleStore.getState().articles.find(a => a.id === selectedArticleId);
-        if (article) window.open(article.link, '_blank');
+        if (article) window.open(article.link, '_blank', 'noopener,noreferrer');
       }
     }, description: '打开原文' },
     { key: 'escape', handler: () => {

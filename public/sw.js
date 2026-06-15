@@ -91,15 +91,19 @@ self.addEventListener('notificationclick', (event) => {
 
   const urlToOpen = event.notification.data?.url || '/';
 
+  // Only allow same-origin URLs
+  const isSameOrigin = urlToOpen.startsWith('/') && !urlToOpen.startsWith('//');
+  const target = isSameOrigin ? urlToOpen : '/';
+
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then((windowClients) => {
       for (const client of windowClients) {
-        if (client.url.includes(urlToOpen) && 'focus' in client) {
+        if (client.url.includes(target) && 'focus' in client) {
           return client.focus();
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
+        return clients.openWindow(target);
       }
     })
   );

@@ -23,6 +23,12 @@ export function ImportOPMLDialog({ open, onClose }: ImportOPMLDialogProps) {
       return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('文件大小不能超过 5MB');
+      setStatus('error');
+      return;
+    }
+
     setStatus('loading');
     try {
       const importResult = await importOPML(file);
