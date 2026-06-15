@@ -302,7 +302,10 @@ async function fetchWithProxy(
       if (res.ok) {
         const text = await res.text();
         if (text.includes('<') && (text.includes('<rss') || text.includes('<feed') || text.includes('<entry') || text.includes('<item') || text.includes('<?xml'))) {
-          return { body: text };
+          // Capture headers from proxy response (some proxies pass through origin headers)
+          const proxyEtag = res.headers.get('ETag') || undefined;
+          const proxyLastModified = res.headers.get('Last-Modified') || undefined;
+          return { body: text, eTag: proxyEtag, lastModified: proxyLastModified };
         }
         lastError = new Error('Response is not valid RSS/Atom XML');
         continue;
@@ -430,6 +433,8 @@ export async function fetchArticles(feedUrl: string, feedId: string): Promise<{ 
   return { articles, notModified: false };
 }
 
+const CONCURRENCY_LIMIT = 6;
+
 export async function refreshAllFeeds(
   onProgress?: (feedId: string, status: 'pending' | 'success' | 'failure') => void,
   options?: { includeDisabled?: boolean }
@@ -437,38 +442,45 @@ export async function refreshAllFeeds(
   const subscriptions = await db.subscriptions.toArray();
   const includeDisabled = options?.includeDisabled ?? false;
 
-  const results = await Promise.allSettled(
-    subscriptions
-      .map(async (sub) => {
-        const feed = await db.feeds.get(sub.feedId);
-        if (!feed || !feed.isActive) return 0;
+  // Build list of feeds to refresh, sorted by lastFetchedAt (oldest first)
+  const feedsToRefresh: { feed: Feed }[] = [];
+  for (const sub of subscriptions) {
+    const feed = await db.feeds.get(sub.feedId);
+    if (!feed || !feed.isActive) continue;
+    if (!includeDisabled && sub.autoRefresh === false) continue;
+    feedsToRefresh.push({ feed });
+  }
+  feedsToRefresh.sort((a, b) => (a.feed.lastFetchedAt ?? 0) - (b.feed.lastFetchedAt ?? 0));
 
-        // Skip feeds with auto-refresh disabled — unless explicitly overriding
-        if (!includeDisabled && sub.autoRefresh === false) return 0;
+  let totalNew = 0;
+  let index = 0;
 
-        onProgress?.(feed.id, 'pending');
+  async function worker(): Promise<void> {
+    while (index < feedsToRefresh.length) {
+      const i = index++;
+      const { feed } = feedsToRefresh[i];
 
-        try {
-          const existingLinks = new Set(
-            (await db.articles.where('feedId').equals(feed.id).toArray()).map(a => a.link)
-          );
-          const { articles } = await fetchArticles(feed.url, feed.id);
-          const newCount = articles.filter(a => !existingLinks.has(a.link)).length;
-
-          onProgress?.(feed.id, 'success');
-          return newCount;
-        } catch (err) {
-          onProgress?.(feed.id, 'failure');
-          throw err;
+      onProgress?.(feed.id, 'pending');
+      try {
+        const prevCount = await db.articles.where('feedId').equals(feed.id).count();
+        const { articles, notModified } = await fetchArticles(feed.url, feed.id);
+        if (!notModified) {
+          const newCount = await db.articles.where('feedId').equals(feed.id).count() - prevCount;
+          totalNew += Math.max(0, newCount);
         }
-      })
-  );
+        onProgress?.(feed.id, 'success');
+      } catch {
+        onProgress?.(feed.id, 'failure');
+      }
+    }
+  }
 
-  return results.reduce((total, r) => {
-    if (r.status === 'fulfilled') return total + r.value;
-    console.warn('[EZRS] Refresh feed failed:', r.reason);
-    return total;
-  }, 0);
+  const workers = Array.from(
+    { length: Math.min(CONCURRENCY_LIMIT, feedsToRefresh.length) },
+    () => worker()
+  );
+  await Promise.all(workers);
+  return totalNew;
 }
 
 export async function detectFeedUrl(url: string): Promise<string[]> {
