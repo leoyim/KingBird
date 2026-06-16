@@ -34,7 +34,7 @@ function gitVersionPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? '/ezrss/' : '/',
+  base: '/',
   plugins: [react(), gitVersionPlugin()],
   resolve: {
     alias: {
