@@ -15,8 +15,8 @@ export function useNotification() {
     showNotification(article.title, {
       body: `${feedTitle}\n${article.summary?.slice(0, 100) || ''}`,
       data: { url: article.link },
-      icon: '/ezrss-icon.png',
-      badge: '/ezrss-icon.png',
+      icon: '/kingbird-icon.png',
+      badge: '/kingbird-icon.png',
       tag: `article-${article.id}`,
     });
   }, []);
@@ -28,7 +28,7 @@ export function useNotification() {
     } else {
       showNotification(`${articles.length} 篇新文章`, {
         body: `来自 ${feedTitle}`,
-        tag: 'ezrss-batch-update',
+        tag: 'kingbird-batch-update',
       });
     }
   }, [notifyNewArticle]);

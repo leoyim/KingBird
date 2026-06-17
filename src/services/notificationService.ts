@@ -22,9 +22,9 @@ export function showNotification(title: string, options?: NotificationOptions): 
 
   navigator.serviceWorker.ready.then((registration) => {
     registration.showNotification(title, {
-      badge: '/ezrss-icon.png',
-      icon: '/ezrss-icon.png',
-      tag: 'ezrss-new-article',
+      badge: '/kingbird-icon.png',
+      icon: '/kingbird-icon.png',
+      tag: 'kingbird-new-article',
       requireInteraction: false,
       silent: false,
       ...options,

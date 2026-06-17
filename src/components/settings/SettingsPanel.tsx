@@ -262,7 +262,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   </div>
                   <div className="flex justify-between">
                     <span>数据库</span>
-                    <span className="font-medium text-mac-text dark:text-mac-text-dark">EZRSS</span>
+                    <span className="font-medium text-mac-text dark:text-mac-text-dark">Kingbird</span>
                   </div>
                   <div className="flex justify-between">
                     <span>存储位置</span>
@@ -283,8 +283,8 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2">导入导出</h3>
                 <div className="space-y-2">
                   <div className="flex gap-2">
-                    <button onClick={async () => { const xml = await exportOPML(); const b = new Blob([xml], { type: 'application/xml' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `ezrss-subscriptions-${new Date().toISOString().split('T')[0]}.opml`; a.click(); URL.revokeObjectURL(u); }} className="btn-mac-ghost gap-1.5 flex-1 justify-center text-xs"><Download className="w-3.5 h-3.5" />导出 OPML</button>
-                    <button onClick={async () => { const json = await exportJSON(); const b = new Blob([json], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `ezrss-backup-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(u); }} className="btn-mac-ghost gap-1.5 flex-1 justify-center text-xs"><Download className="w-3.5 h-3.5" />导出 JSON</button>
+                    <button onClick={async () => { const xml = await exportOPML(); const b = new Blob([xml], { type: 'application/xml' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `kingbird-subscriptions-${new Date().toISOString().split('T')[0]}.opml`; a.click(); URL.revokeObjectURL(u); }} className="btn-mac-ghost gap-1.5 flex-1 justify-center text-xs"><Download className="w-3.5 h-3.5" />导出 OPML</button>
+                    <button onClick={async () => { const json = await exportJSON(); const b = new Blob([json], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `kingbird-backup-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(u); }} className="btn-mac-ghost gap-1.5 flex-1 justify-center text-xs"><Download className="w-3.5 h-3.5" />导出 JSON</button>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => opmlInputRef.current?.click()} className="btn-mac-ghost gap-1.5 flex-1 justify-center text-xs"><Upload className="w-3.5 h-3.5" />导入 OPML</button>

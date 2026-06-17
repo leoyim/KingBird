@@ -27,7 +27,7 @@ function gitVersionPlugin(): Plugin {
     },
     configureServer() {
       // Print on dev server startup
-      console.log(`\n  EZRSS version: ${version}\n`)
+      console.log(`\n  Kingbird version: ${version}\n`)
     },
   }
 }
@@ -47,5 +47,19 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'lucide': ['lucide-react'],
+          'prismjs': ['prismjs'],
+          'dexie': ['dexie'],
+          'flexsearch': ['flexsearch'],
+          'zustand': ['zustand'],
+        },
+      },
+    },
   },
 })

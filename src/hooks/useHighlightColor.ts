@@ -14,6 +14,6 @@ export function useHighlightColor(): void {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--ezrss-accent-rgb', hexToRgb(highlightColor || '#007AFF'));
+    root.style.setProperty('--kingbird-accent-rgb', hexToRgb(highlightColor || '#007AFF'));
   }, [highlightColor]);
 }

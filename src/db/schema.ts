@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import type { Feed, Subscription, Article, ArticleReadState, Tag, ArticleTag, SubscriptionTag, Folder, UserPreferences, FilterRule } from '@/types';
 import { DEFAULT_PREFERENCES } from '@/types';
 
-export class EZRSSDatabase extends Dexie {
+export class KingbirdDatabase extends Dexie {
   feeds!: Table<Feed, string>;
   subscriptions!: Table<Subscription, string>;
   articles!: Table<Article, string>;
@@ -15,7 +15,7 @@ export class EZRSSDatabase extends Dexie {
   filterRules!: Table<FilterRule, string>;
 
   constructor() {
-    super('EZRSS');
+    super('Kingbird');
 
     this.version(2).stores({
       feeds: 'id, url',
@@ -55,4 +55,4 @@ export class EZRSSDatabase extends Dexie {
   }
 }
 
-export const db = new EZRSSDatabase();
+export const db = new KingbirdDatabase();

@@ -64,7 +64,7 @@ export const useUIStore = create<UIState>()(
       setStarredFilter: (starredFilter) => set({ starredFilter }),
     }),
     {
-      name: 'ezrss-ui-store',
+      name: 'kingbird-ui-store',
       partialize: (state) => ({
         preferences: state.preferences,
         sidebarOpen: state.sidebarOpen,

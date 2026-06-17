@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "EZRSS",
+  "productName": "Kingbird",
   "version": "0.1.0",
-  "identifier": "cn.leoyim.ezrss",
+  "identifier": "cn.leoyim.kingbird",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "EZRSS",
+        "title": "Kingbird",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

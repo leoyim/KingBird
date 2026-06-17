@@ -133,7 +133,7 @@ export async function exportOPML(): Promise<string> {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<opml version="2.0">\n';
   xml += '  <head>\n';
-  xml += '    <title>EZRSS Subscriptions</title>\n';
+  xml += '    <title>Kingbird Subscriptions</title>\n';
   xml += `    <dateCreated>${new Date().toISOString()}</dateCreated>\n`;
   xml += '  </head>\n';
   xml += '  <body>\n';

@@ -1,14 +1,14 @@
 {
-  "name": "EZRSS",
-  "short_name": "EZRSS",
-  "description": "极简 macOS 风格本地 RSS 阅读器",
+  "name": "Kingbird",
+  "short_name": "Kingbird",
+  "description": "Kingbird - 极简多平台 RSS 阅读器",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F5F5F7",
   "theme_color": "#007AFF",
   "icons": [
     {
-      "src": "/ezrss-icon.png",
+      "src": "/kingbird-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

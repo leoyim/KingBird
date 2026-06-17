@@ -54,8 +54,8 @@ export function Toolbar({
         </button>
 
         <div className="flex items-center gap-1.5 ml-1">
-          <img src="/ezrss-icon.png" alt="" className="w-5 h-5 rounded-md object-cover" />
-          <span className="text-sm font-semibold tracking-tight">EZRSS</span>
+          <img src="/kingbird-icon.png" alt="" className="w-5 h-5 rounded-md object-cover" />
+          <span className="text-sm font-semibold tracking-tight">Kingbird</span>
           {unreadCount > 0 && (
             <span className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary bg-mac-blue/10 px-1.5 py-0.5 rounded-full">
               {unreadCount}

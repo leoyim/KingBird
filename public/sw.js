@@ -1,6 +1,6 @@
 // Service Worker for offline caching
-const CACHE_NAME = 'ezrss-v4';
-const ASSET_CACHE = 'ezrss-assets-v4';
+const CACHE_NAME = 'kingbird-v4';
+const ASSET_CACHE = 'kingbird-assets-v4';
 
 // App shell — minimum required for offline startup
 const APP_SHELL = ['/', '/index.html'];

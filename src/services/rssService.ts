@@ -283,9 +283,9 @@ async function fetchWithProxy(
     }
   } catch (directErr: unknown) {
     if (directErr instanceof DOMException && directErr.name === 'AbortError') {
-      console.warn(`[EZRSS] Direct fetch timed out for ${url}`);
+      console.warn(`[Kingbird] Direct fetch timed out for ${url}`);
     } else {
-      console.warn(`[EZRSS] Direct fetch failed: ${directErr instanceof Error ? directErr.message : String(directErr)}`);
+      console.warn(`[Kingbird] Direct fetch failed: ${directErr instanceof Error ? directErr.message : String(directErr)}`);
     }
   }
 
@@ -313,7 +313,7 @@ async function fetchWithProxy(
       lastError = new Error(`Proxy ${proxyBase} returned ${res.status}`);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      console.warn(`[EZRSS] Proxy ${proxyBase} failed: ${lastError.message}`);
+      console.warn(`[Kingbird] Proxy ${proxyBase} failed: ${lastError.message}`);
     }
   }
 

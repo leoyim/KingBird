@@ -9,7 +9,7 @@ export default {
     extend: {
       colors: {
         mac: {
-          blue: 'rgb(var(--ezrss-accent-rgb, 0 122 255) / <alpha-value>)',
+          blue: 'rgb(var(--kingbird-accent-rgb, 0 122 255) / <alpha-value>)',
           'blue-dark': '#0056CC',
           'blue-light': '#E8F2FF',
           green: '#34C759',
