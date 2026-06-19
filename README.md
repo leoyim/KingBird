@@ -105,7 +105,14 @@ graph TD
 
 ### Build Environment Setup
 
-Kingbird multi-platform build environment: install Node.js + bun first, then Rust (rustup default stable toolchain, target auto-matches host); Windows requires VS 2022 Build Tools with C++ workload, macOS requires Xcode Command Line Tools, Linux requires `build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev`. Once ready, `bun install` for dependencies, `bun run build` for Web build, `bun run tauri:build` for desktop installers (Windows→.msi / macOS→.dmg / Linux→.AppImage).
+```
+Kingbird multi-platform build environment:
+1. Install Node.js + bun
+2. Install Rust (rustup default stable toolchain, target auto-matches host)
+3. Windows: VS 2022 Build Tools with C++ workload
+   macOS: Xcode Command Line Tools
+   Linux: build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+```
 
 ### Web
 

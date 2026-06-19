@@ -105,7 +105,14 @@ graph TD
 
 ### 环境搭建提示词
 
-Kingbird 多平台编译环境：先装 Node.js + bun，再装 Rust（rustup 默认 stable 工具链，目标自动匹配本机）；Windows 需 VS 2022 Build Tools 的 C++ 工作负载，macOS 需 Xcode Command Line Tools，Linux 需 `build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev`。
+```
+Kingbird 多平台编译环境：
+1. 安装 Node.js + bun
+2. 安装 Rust（rustup 默认 stable 工具链，目标自动匹配本机）
+3. Windows: VS 2022 Build Tools 的 C++ 工作负载
+   macOS: Xcode Command Line Tools
+   Linux: build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+```
 
 ### Web 端
 
