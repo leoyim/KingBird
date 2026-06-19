@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import {
   ArrowLeft, ExternalLink, Star, Type, Eye, EyeOff,
-  ChevronLeft, ChevronRight, ArrowUp,
+  ChevronLeft, ChevronRight,
   ImageIcon, Clock, QrCode, X
 } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -464,7 +464,30 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
         </article>
       </div>
 
-      {/* Back to top floating button */}
+      {/* Back to top floating button with progress ring */}
+      {(() => {
+        const progressColor = (() => {
+          const stops = [
+            { pos: 0, r: 255, g: 59, b: 48 },
+            { pos: 33, r: 255, g: 149, b: 0 },
+            { pos: 66, r: 0, g: 122, b: 255 },
+            { pos: 100, r: 52, g: 199, b: 89 },
+          ];
+          const p = Math.min(100, Math.max(0, progress));
+          let a = stops[0], b = stops[stops.length - 1];
+          for (let i = 0; i < stops.length - 1; i++) {
+            if (p >= stops[i].pos && p <= stops[i + 1].pos) {
+              a = stops[i]; b = stops[i + 1]; break;
+            }
+          }
+          const t = (p - a.pos) / (b.pos - a.pos || 1);
+          const R = Math.round(a.r + (b.r - a.r) * t);
+          const G = Math.round(a.g + (b.g - a.g) * t);
+          const B = Math.round(a.b + (b.b - a.b) * t);
+          return `rgb(${R},${G},${B})`;
+        })();
+
+        return (
       <button
         onClick={scrollToTop}
         className={`absolute bottom-5 right-5 z-50 w-9 h-9 rounded-full bg-white dark:bg-[#2a2a2a] shadow-md ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-center transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95 ${
@@ -472,10 +495,33 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
             ? 'translate-y-0 opacity-100'
             : 'translate-y-4 opacity-0 pointer-events-none'
         }`}
-        title="返回顶部"
+        title={`阅读进度 ${Math.round(progress)}% — 返回顶部`}
       >
-        <ArrowUp className="w-4 h-4 text-mac-text-secondary dark:text-mac-text-dark-secondary" />
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 36 36">
+          <circle
+            cx="18" cy="18" r="16.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            className="text-black/10 dark:text-white/10"
+          />
+          <circle
+            cx="18" cy="18" r="16.5"
+            fill="none"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 16.5}
+            strokeDashoffset={2 * Math.PI * 16.5 - (progress / 100) * 2 * Math.PI * 16.5}
+            transform="rotate(-90 18 18)"
+            style={{ stroke: progressColor }}
+          />
+        </svg>
+        <span className="text-[10px] font-bold tabular-nums" style={{ color: progressColor }}>
+          {Math.round(progress)}
+        </span>
       </button>
+        );
+      })()}
     </div>
   );
 }

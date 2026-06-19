@@ -9,6 +9,7 @@ interface ArticleItemProps {
   isRead: boolean;
   isStarred: boolean;
   isSelected: boolean;
+  isEven: boolean;
   onClick: () => void;
   style?: React.CSSProperties;
 }
@@ -19,6 +20,7 @@ export function ArticleItem({
   isRead,
   isStarred,
   isSelected,
+  isEven,
   onClick,
   style,
 }: ArticleItemProps) {
@@ -35,7 +37,7 @@ export function ArticleItem({
       className={`px-4 py-2 cursor-pointer transition-all duration-150 border-b border-black/3 dark:border-white/3 group relative ${
         isSelected
           ? 'bg-mac-blue/8 dark:bg-mac-blue/12 border-l-2 border-l-mac-blue'
-          : 'hover:bg-black/3 dark:hover:bg-white/3 border-l-2 border-l-transparent'
+          : `${isEven ? 'bg-black/[0.02] dark:bg-white/[0.02]' : 'bg-transparent'} hover:bg-black/3 dark:hover:bg-white/3 border-l-2 border-l-transparent`
       }`}
       onClick={onClick}
     >

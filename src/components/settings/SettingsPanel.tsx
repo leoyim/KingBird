@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Palette, Bell, Database } from 'lucide-react';
+import { Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Bell, Database } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -21,26 +21,26 @@ interface ColorSwatch {
   label: string;
 }
 
-const CHINESE_COLORS: ColorSwatch[] = [
-  { hex: '#FF461F', label: '朱砂' },
-  { hex: '#9D2933', label: '胭脂' },
-  { hex: '#DB5A6B', label: '海棠红' },
-  { hex: '#FFD700', label: '明黄' },
-  { hex: '#177CB0', label: '天青' },
-  { hex: '#789262', label: '竹青' },
-  { hex: '#4A4266', label: '黛色' },
-  { hex: '#1C1C1C', label: '玄色' },
-];
-
-const MODERN_COLORS: ColorSwatch[] = [
-  { hex: '#A3B18A', label: '鼠尾草绿' },
-  { hex: '#E2725B', label: '陶土色' },
-  { hex: '#1F3A5F', label: '海军蓝' },
-  { hex: '#6E8CA0', label: '雾霾蓝' },
-  { hex: '#B497BD', label: '薰衣草紫' },
-  { hex: '#FF6F61', label: '珊瑚橙' },
-  { hex: '#C68E59', label: '焦糖棕' },
-  { hex: '#BE3455', label: '活力洋红' },
+const PLATFORM_COLORS: ColorSwatch[] = [
+  { hex: '#1877F2', label: 'Facebook' },
+  { hex: '#E1306C', label: 'Instagram' },
+  { hex: '#000000', label: 'X / Medium' },
+  { hex: '#0A66C2', label: 'LinkedIn' },
+  { hex: '#FE2C55', label: 'TikTok' },
+  { hex: '#FF0000', label: 'YouTube' },
+  { hex: '#E60023', label: 'Pinterest' },
+  { hex: '#FFFC00', label: 'Snapchat' },
+  { hex: '#25D366', label: 'WhatsApp' },
+  { hex: '#2AABEE', label: 'Telegram' },
+  { hex: '#5865F2', label: 'Discord' },
+  { hex: '#FF4500', label: 'Reddit' },
+  { hex: '#35465D', label: 'Tumblr' },
+  { hex: '#FF6719', label: 'Substack' },
+  { hex: '#B92B27', label: 'Quora' },
+  { hex: '#9146FF', label: 'Twitch' },
+  { hex: '#00C300', label: 'LINE' },
+  { hex: '#07C160', label: 'WeChat' },
+  { hex: '#45668E', label: 'VK' },
 ];
 
 /* ---- Toggle Switch ---- */
@@ -76,7 +76,6 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   if (!open) return null;
 
   const themeOptions: { value: ThemeMode; label: string; icon: React.ReactNode }[] = [
-    { value: 'light', label: '浅色', icon: <Sun className="w-4 h-4" /> },
     { value: 'dark', label: '深色', icon: <Moon className="w-4 h-4" /> },
     { value: 'system', label: '跟随系统', icon: <Monitor className="w-4 h-4" /> },
   ];
@@ -167,8 +166,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               {/* Highlight color */}
               <div>
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2">高亮色</h3>
-                <ColorSwatchGroup title="传统中国色" colors={CHINESE_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
-                <ColorSwatchGroup title="现代流行色" colors={MODERN_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
+                <ColorSwatchGroup colors={PLATFORM_COLORS} selectedHex={preferences.highlightColor} onSelect={setHighlightColor} />
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -316,10 +314,9 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
 /* ---- Color swatch group ---- */
 
-function ColorSwatchGroup({ title, colors, selectedHex, onSelect }: { title: string; colors: ColorSwatch[]; selectedHex: string; onSelect: (hex: string) => void }) {
+function ColorSwatchGroup({ colors, selectedHex, onSelect }: { colors: ColorSwatch[]; selectedHex: string; onSelect: (hex: string) => void }) {
   return (
     <div>
-      <p className="text-[11px] font-medium text-mac-text-secondary/70 mb-2">{title}</p>
       <div className="flex flex-wrap gap-1.5">
         {colors.map(({ hex, label }) => {
           const isSelected = selectedHex === hex;

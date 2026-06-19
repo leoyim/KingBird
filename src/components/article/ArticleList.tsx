@@ -131,6 +131,7 @@ export function ArticleList({ onSelectArticle, selectedArticleId }: ArticleListP
                   isRead={readState?.isRead || false}
                   isStarred={readState?.isStarred || false}
                   isSelected={selectedArticleId === article.id}
+                  isEven={virtualRow.index % 2 === 0}
                   onClick={() => handleArticleClick(article.id)}
                   style={{
                     position: 'absolute',

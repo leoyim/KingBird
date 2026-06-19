@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  Plus, RefreshCw, Search, Settings, Sun, Moon, Glasses,
+  Plus, RefreshCw, Search, Settings, Moon, Glasses,
   PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown, Command, X
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
@@ -34,7 +34,7 @@ export function Toolbar({
   const unreadCount = useUIStore((s) => s.unreadCount);
 
   const cycleTheme = useCallback(() => {
-    const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
+    const next = theme === 'dark' ? 'system' : 'dark';
     setTheme(next);
   }, [theme, setTheme]);
 
@@ -177,8 +177,6 @@ export function Toolbar({
         >
           {theme === 'dark' ? (
             <Moon className="w-4 h-4" />
-          ) : theme === 'light' ? (
-            <Sun className="w-4 h-4" />
           ) : (
             <div className="w-4 h-4 flex items-center justify-center">
               <div className="w-3 h-3 rounded-full border-2 border-current" />
