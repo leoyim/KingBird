@@ -239,6 +239,10 @@ The project includes `manifest.json` and a Service Worker. After deployment, use
 
 ---
 
+## Disclaimer
+
+Kingbird is a **client-side tool only**. It does not host, store, distribute, or recommend any content. All data resides locally on the user's device; no data is uploaded to any server. Users are solely responsible for the RSS feeds they subscribe to and the content they access. The project has no affiliation with any content source and does not provide proxy, circumvention, or censorship-bypass capabilities.
+
 ## License
 
 MIT License
