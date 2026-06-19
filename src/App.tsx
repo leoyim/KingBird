@@ -185,6 +185,18 @@ function App() {
 
   return (
     <AppLayout
+      articleList={
+        <ArticleList
+          onSelectArticle={handleSelectArticle}
+          selectedArticleId={selectedArticleId}
+        />
+      }
+      readerView={
+        <ReaderView
+          articleId={selectedArticleId}
+          onClose={() => setSelectedArticleId(null)}
+        />
+      }
       onAddFeed={() => setAddFeedOpen(true)}
       onRefresh={() => doRefresh(false)}
       isRefreshing={isRefreshing}
@@ -193,16 +205,6 @@ function App() {
       onImportOPML={() => setImportOPMLOpen(true)}
       onEditFeed={(feedId: string) => { setEditingFeedId(feedId); setEditFeedOpen(true); }}
     >
-      {/* Article List + Reader View */}
-      <ArticleList
-        onSelectArticle={handleSelectArticle}
-        selectedArticleId={selectedArticleId}
-      />
-      <ReaderView
-        articleId={selectedArticleId}
-        onClose={() => setSelectedArticleId(null)}
-      />
-
       {/* Dialogs & Panels */}
       <AddFeedDialog
         open={addFeedOpen}

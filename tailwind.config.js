@@ -38,6 +38,7 @@ export default {
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'scale-in': 'scaleIn 0.2s ease-out',
+        'slide-in-left': 'slideInLeft 0.25s ease-out',
       },
       keyframes: {
         fadeIn: {
@@ -51,6 +52,10 @@ export default {
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        slideInLeft: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
     },

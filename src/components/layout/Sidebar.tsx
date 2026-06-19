@@ -182,7 +182,7 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
   };
 
   return (
-    <aside ref={sidebarRef} className="w-[260px] min-w-[260px] h-full glass-sidebar flex flex-col overflow-hidden">
+    <aside ref={sidebarRef} className="w-full lg:w-[260px] lg:min-w-[260px] h-full glass-sidebar flex flex-col overflow-hidden">
       {/* Smart filters */}
       <div className="px-2 pt-3 pb-1">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 px-2 mb-1">

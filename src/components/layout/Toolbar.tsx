@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import {
   Plus, RefreshCw, Search, Settings, Moon, Sun, Monitor, PenTool,
-  PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown, Command, X
+  PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown, Command, X, Menu
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useTheme } from '@/hooks/useTheme';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface ToolbarProps {
   onAddFeed: () => void;
@@ -40,6 +41,7 @@ export function Toolbar({
     setTheme(order[(idx + 1) % order.length]);
   }, [theme, setTheme]);
 
+  const isMobile = useIsMobile();
   const { isInstallable, install } = usePWAInstall();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
@@ -65,7 +67,9 @@ export function Toolbar({
           className="btn-mac-ghost h-8 w-8 p-0 rounded-lg"
           title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
         >
-          {sidebarOpen ? (
+          {isMobile ? (
+            <Menu className="w-4 h-4" />
+          ) : sidebarOpen ? (
             <PanelLeftClose className="w-4 h-4" />
           ) : (
             <PanelLeftOpen className="w-4 h-4" />
@@ -74,14 +78,14 @@ export function Toolbar({
 
         <div className="flex items-center gap-1.5 ml-1">
           <img src="/kingbird-icon.png" alt="" className="w-5 h-5 rounded-md object-cover" />
-          <span className="text-sm font-semibold tracking-tight">Kingbird</span>
+          <span className="text-sm font-semibold tracking-tight hidden sm:inline">Kingbird</span>
           {unreadCount > 0 && (
             <span className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary bg-mac-blue/10 px-1.5 py-0.5 rounded-full">
               {unreadCount}
             </span>
           )}
           {/* Shortcuts button + dropdown */}
-          <span className="relative">
+          <span className="relative hidden sm:inline-block">
             <button
               onClick={() => setShowShortcuts(!showShortcuts)}
               className="btn-mac-ghost h-6 w-6 p-0 rounded-md"
@@ -137,7 +141,7 @@ export function Toolbar({
           {onImportOPML && (
             <button
               onClick={onImportOPML}
-              className="h-7 w-7 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              className="h-7 w-7 hidden sm:flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               title="导入 OPML"
             >
               <FileUp className="w-3.5 h-3.5" />
@@ -165,7 +169,7 @@ export function Toolbar({
         {isInstallable && (
           <button
             onClick={install}
-            className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-mac-blue"
+            className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-mac-blue hidden sm:inline-flex"
             title="安装应用到桌面"
           >
             <MonitorDown className="w-4 h-4" />
@@ -174,7 +178,7 @@ export function Toolbar({
 
         <button
           onClick={() => setEinkMode(!einkMode)}
-          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'bg-mac-blue/10 text-mac-blue' : ''}`}
+          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'bg-mac-blue/10 text-mac-blue' : ''} hidden sm:inline-flex`}
           title={einkMode ? '退出墨水屏模式' : '墨水屏模式'}
         >
           <PenTool className="w-4 h-4" />
@@ -182,7 +186,7 @@ export function Toolbar({
 
         <button
           onClick={einkMode ? undefined : cycleTheme}
-          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'opacity-30 cursor-not-allowed' : ''}`}
+          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'opacity-30 cursor-not-allowed' : ''} hidden sm:inline-flex`}
           title={einkMode ? '墨水屏模式下锁定日间主题' : '切换主题'}
         >
           {theme === 'dark' ? (

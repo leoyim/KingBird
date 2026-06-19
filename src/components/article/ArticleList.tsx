@@ -84,7 +84,7 @@ export function ArticleList({ onSelectArticle, selectedArticleId }: ArticleListP
   }
 
   return (
-    <div className="w-[380px] min-w-[320px] border-r border-black/5 dark:border-white/5 flex flex-col">
+    <div className="w-full lg:w-[380px] lg:min-w-[320px] border-r border-black/5 dark:border-white/5 flex flex-col">
       {/* Header */}
       <div className="h-10 flex items-center justify-between px-4 border-b border-black/5 dark:border-white/5 shrink-0">
         <span className="text-xs font-medium text-mac-text-secondary dark:text-mac-text-dark-secondary">
