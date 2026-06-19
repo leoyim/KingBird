@@ -59,6 +59,7 @@ graph TD
 
 ### Article Reading
 - 📋 Three-column layout: sidebar → article list → reader view
+- 📱 **Responsive design** — on mobile, sidebar slides in as an overlay, article list and reader switch to full-screen
 - 👁️ Unread / read tracking, one-click toggle
 - ⭐ Starred articles with dedicated filter
 - 🔍 Full-text keyword search (FlexSearch local index)
@@ -77,6 +78,12 @@ graph TD
 - 🔄 Per-feed refresh status (pending / success / failure)
 - 🔔 Browser push notifications
 - ⏱️ Configurable auto-refresh (manual / 15 / 30 / 60 / 180 minutes)
+
+### Mobile & Responsive
+- 📱 **Responsive layout** — automatically adapts to mobile, tablet, and desktop
+- 🍔 **Collapsible sidebar** — subscription list becomes a slide-over overlay on mobile, toggleable via hamburger button
+- 📖 **Full-screen reader** — article list and reader view switch to full screen on mobile; back button returns to list
+- 🧹 **Responsive toolbar** — adapts to small screens, hiding less-frequent actions while keeping core ones accessible
 
 ### Data Security
 - 🔒 All data stored locally in IndexedDB only
