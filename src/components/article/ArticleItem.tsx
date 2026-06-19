@@ -32,13 +32,26 @@ export function ArticleItem({
   return (
     <div
       style={style}
-      className={`px-4 py-3 cursor-pointer transition-all duration-150 border-b border-black/3 dark:border-white/3 group ${
+      className={`px-4 py-2 cursor-pointer transition-all duration-150 border-b border-black/3 dark:border-white/3 group relative ${
         isSelected
           ? 'bg-mac-blue/8 dark:bg-mac-blue/12 border-l-2 border-l-mac-blue'
           : 'hover:bg-black/3 dark:hover:bg-white/3 border-l-2 border-l-transparent'
       }`}
       onClick={onClick}
     >
+      {/* Star button — absolute positioned, visible on hover */}
+      <button
+        onClick={handleStarClick}
+        className={`absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-opacity ${
+          isStarred ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <Star
+          className={`w-3.5 h-3.5 ${
+            isStarred ? 'text-mac-orange fill-mac-orange' : 'text-mac-text-secondary/40'
+          }`}
+        />
+      </button>
       <div className="flex items-start gap-2">
         {/* Unread indicator dot */}
         <div className="pt-[7px] shrink-0">
@@ -52,7 +65,7 @@ export function ArticleItem({
         <div className="flex-1 min-w-0">
           {/* Feed + Time */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] text-mac-blue font-medium truncate">
+            <span className="text-[11px] text-mac-blue font-medium truncate" title={feedTitle}>
               {feedTitle}
             </span>
             <span className="text-[10px] text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 shrink-0">
@@ -62,7 +75,7 @@ export function ArticleItem({
 
           {/* Title */}
           <h3
-            className={`text-sm leading-snug mb-1 line-clamp-2 ${
+            className={`text-sm leading-snug mb-1 line-clamp-1 ${
               isRead
                 ? 'text-mac-text-secondary dark:text-mac-text-dark-secondary font-normal'
                 : 'text-mac-text dark:text-mac-text-dark font-semibold'
@@ -92,19 +105,6 @@ export function ArticleItem({
         )}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={handleStarClick}
-          className="h-5 w-5 rounded flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10"
-        >
-          <Star
-            className={`w-3 h-3 ${
-              isStarred ? 'text-mac-orange fill-mac-orange' : 'text-mac-text-secondary/40'
-            }`}
-          />
-        </button>
-      </div>
     </div>
   );
 }

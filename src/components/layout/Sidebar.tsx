@@ -349,7 +349,7 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
                   <ChevronRight className="w-3.5 h-3.5 shrink-0 text-mac-text-secondary dark:text-mac-text-dark-secondary" />
                 )}
                 <FolderOpen className="w-4 h-4 shrink-0" />
-                <span className="text-sm truncate flex-1">{folder.name}</span>
+                <span className="text-sm truncate flex-1" title={folder.name}>{folder.name}</span>
                 {folderUnread > 0 && (
                   <span className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary tabular-nums">
                     {folderUnread}
@@ -375,14 +375,6 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
                         batchMode={batchMode}
                         isBatchSelected={subId ? batchSelectedIds.has(subId) : false}
                         isEven={ri++ % 2 === 0}
-                        onBatchToggle={(sid) => {
-                          setBatchSelectedIds(prev => {
-                            const next = new Set(prev);
-                            if (next.has(sid)) next.delete(sid);
-                            else next.add(sid);
-                            return next;
-                          });
-                        }}
                         subTags={subId ? getTagsForSubscription(subId) : []}
                         allTags={tags}
                         onClick={(e) => {
@@ -439,14 +431,6 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
               batchMode={batchMode}
               isBatchSelected={subId ? batchSelectedIds.has(subId) : false}
               isEven={ri++ % 2 === 0}
-              onBatchToggle={(sid) => {
-                setBatchSelectedIds(prev => {
-                  const next = new Set(prev);
-                  if (next.has(sid)) next.delete(sid);
-                  else next.add(sid);
-                  return next;
-                });
-              }}
               subTags={subId ? getTagsForSubscription(subId!) : []}
               allTags={tags}
               onClick={(e) => {
@@ -598,7 +582,6 @@ function FeedSidebarItem({
   showContextMenu,
   batchMode,
   isBatchSelected,
-  onBatchToggle,
   isEven,
   subTags,
   allTags,
@@ -617,7 +600,6 @@ function FeedSidebarItem({
   showContextMenu?: boolean;
   batchMode?: boolean;
   isBatchSelected?: boolean;
-  onBatchToggle?: (subId: string) => void;
   isEven?: boolean;
   subTags: import('@/types').Tag[];
   allTags: import('@/types').Tag[];
@@ -702,54 +684,36 @@ function FeedSidebarItem({
     <div className="relative">
       <div
         className={`group flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all duration-200 border-b border-black/[0.06] dark:border-white/[0.06] border-l-[5px] ${
-          isSelected
+          isSelected || isBatchSelected
             ? 'bg-mac-blue/[0.07] text-mac-blue border-l-mac-blue'
             : `${isEven ? 'bg-black/[0.02] dark:bg-white/[0.02]' : 'bg-transparent'} border-l-black/[0.08] dark:border-l-white/[0.06] hover:border-l-black/[0.12] dark:hover:border-l-white/[0.1]`
         }`}
         onClick={onClick}
       >
-        {/* --- Icon: batch checkbox or favicon --- */}
-        {batchMode ? (
-          <span
-            className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
-              isBatchSelected
-                ? 'bg-mac-blue border-mac-blue text-white'
-                : 'border-black/15 dark:border-white/15 hover:border-mac-blue/50'
-            }`}
-          >
-            {isBatchSelected && (
-              <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-                <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </span>
-        ) : (
-          <>
-            {faviconUrl ? (
-              <img
-                src={faviconUrl}
-                alt=""
-                className="w-4 h-4 rounded-sm shrink-0 object-contain"
-                loading="lazy"
-                onError={(e) => {
-                  // Fallback to RSS icon on error
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement | null;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-4 h-4 rounded-sm shrink-0 bg-mac-blue/20 items-center justify-center ${faviconUrl ? 'hidden' : 'flex'}`}
-            >
-              <Rss className="w-2.5 h-2.5 text-mac-blue" />
-            </div>
-          </>
-        )}
+        {/* --- Icon: favicon or RSS fallback --- */}
+        {faviconUrl ? (
+          <img
+            src={faviconUrl}
+            alt=""
+            className="w-4 h-4 rounded-sm shrink-0 object-contain"
+            loading="lazy"
+            onError={(e) => {
+              // Fallback to RSS icon on error
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              const fallback = target.nextElementSibling as HTMLElement | null;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div
+          className={`w-4 h-4 rounded-sm shrink-0 bg-mac-blue/20 items-center justify-center ${faviconUrl ? 'hidden' : 'flex'}`}
+        >
+          <Rss className="w-2.5 h-2.5 text-mac-blue" />
+        </div>
 
         {/* Feed title — bold when refresh succeeded */}
-        <span className={`text-sm truncate flex-1 ${unreadCount > 0 || isRefreshSuccess ? 'font-semibold' : ''} ${isRefreshSuccess && !isSelected ? 'font-bold' : ''}`}>
+        <span className={`text-sm truncate flex-1 ${unreadCount > 0 || isRefreshSuccess ? 'font-semibold' : ''} ${isRefreshSuccess && !isSelected ? 'font-bold' : ''}`} title={feed.title}>
           {feed.title}
         </span>
 

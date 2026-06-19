@@ -335,14 +335,14 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
             alt="QR Code"
             className="w-[140px] h-[140px] rounded-md"
           />
-          <p className="text-[10px] text-mac-text-secondary/60 mt-1.5 max-w-[140px] truncate">
+          <p className="text-[10px] text-mac-text-secondary/60 mt-1.5 max-w-[140px] truncate" title={article.link}>
             {article.link}
           </p>
         </div>
       )}
 
       {/* Article Content */}
-      <div className="flex-1 overflow-y-auto relative" ref={contentRef}>
+      <div className="flex-1 overflow-y-auto" ref={contentRef}>
         {/* Sticky header — slides in when original header scrolls out of view */}
         <div
           className={`sticky top-0 z-10 bg-white dark:bg-[#1e1e1e] transition-all duration-300 ease-out ${
@@ -462,20 +462,20 @@ export function ReaderView({ articleId, onClose }: ReaderViewProps) {
             dangerouslySetInnerHTML={{ __html: renderedContent }}
           />
         </article>
-
-        {/* Back to top floating button */}
-        <button
-          onClick={scrollToTop}
-          className={`absolute bottom-4 right-4 z-20 w-9 h-9 rounded-full bg-white dark:bg-[#2a2a2a] shadow-md ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-center transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95 ${
-            showBackToTop
-              ? 'translate-y-0 opacity-100'
-              : 'translate-y-4 opacity-0 pointer-events-none'
-          }`}
-          title="返回顶部"
-        >
-          <ArrowUp className="w-4 h-4 text-mac-text-secondary dark:text-mac-text-dark-secondary" />
-        </button>
       </div>
+
+      {/* Back to top floating button */}
+      <button
+        onClick={scrollToTop}
+        className={`absolute bottom-5 right-5 z-50 w-9 h-9 rounded-full bg-white dark:bg-[#2a2a2a] shadow-md ring-1 ring-black/5 dark:ring-white/5 flex items-center justify-center transition-all duration-300 ease-out hover:shadow-lg hover:scale-105 active:scale-95 ${
+          showBackToTop
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-4 opacity-0 pointer-events-none'
+        }`}
+        title="返回顶部"
+      >
+        <ArrowUp className="w-4 h-4 text-mac-text-secondary dark:text-mac-text-dark-secondary" />
+      </button>
     </div>
   );
 }

@@ -123,7 +123,7 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
                   {article.summary?.replace(/<[^>]*>/g, '').slice(0, 120)}
                 </p>
                 <div className="flex items-center gap-2 text-[10px] text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60">
-                  <span className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 font-medium">{getFeedTitle(article.feedId)}</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 font-medium" title={getFeedTitle(article.feedId)}>{getFeedTitle(article.feedId)}</span>
                   <span>{formatRelativeTime(article.publishedAt)}</span>
                 </div>
               </button>

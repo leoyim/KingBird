@@ -206,7 +206,7 @@ export function AddFeedDialog({ open, onClose, onRefreshRequested }: AddFeedDial
                   >
                     <div className="flex items-center gap-2">
                       <Rss className="w-4 h-4 text-mac-blue shrink-0" />
-                      <span className="text-sm truncate group-hover:text-mac-blue transition-colors">
+                      <span className="text-sm truncate group-hover:text-mac-blue transition-colors" title={feedUrl}>
                         {feedUrl}
                       </span>
                     </div>
