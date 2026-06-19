@@ -1,5 +1,6 @@
 import type { Feed, Subscription, Folder } from '@/types';
 import { db } from '@/db/schema';
+import { generateUUID } from '@/utils/uuid';
 
 const MAX_IMPORT_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_FEEDS_IMPORT = 500;
@@ -93,7 +94,7 @@ export async function importOPML(file: File): Promise<{ feeds: number; folders: 
     if (!outline.xmlUrl || existingUrls.has(outline.xmlUrl)) continue;
     if (!isValidHttpUrl(outline.xmlUrl)) continue;
 
-    const feedId = crypto.randomUUID();
+    const feedId = generateUUID();
     const feed: Feed = {
       id: feedId,
       url: outline.xmlUrl,
@@ -109,7 +110,7 @@ export async function importOPML(file: File): Promise<{ feeds: number; folders: 
     feedsToAdd.push(feed);
 
     subscriptionsToAdd.push({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       feedId,
       sortOrder: sortOrder++,
       updateInterval: 30,

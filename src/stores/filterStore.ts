@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { FilterRule } from '@/types';
 import { db } from '@/db/schema';
+import { generateUUID } from '@/utils/uuid';
 
 interface FilterState {
   rules: FilterRule[];
@@ -25,7 +26,7 @@ export const useFilterStore = create<FilterState>((set, get) => ({
 
   addRule: async (keyword) => {
     const rule: FilterRule = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       keyword: keyword.trim(),
       isActive: true,
       createdAt: Date.now(),

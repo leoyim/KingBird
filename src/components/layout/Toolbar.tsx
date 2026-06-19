@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import {
   Plus, RefreshCw, Search, Settings, Sun, Moon, Glasses,
-  PanelLeftClose, PanelLeftOpen, FileUp
+  PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useTheme } from '@/hooks/useTheme';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface ToolbarProps {
   onAddFeed: () => void;
@@ -36,6 +37,8 @@ export function Toolbar({
     const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
     setTheme(next);
   }, [theme, setTheme]);
+
+  const { isInstallable, install } = usePWAInstall();
 
   return (
     <header className="glass-toolbar h-11 flex items-center px-3 gap-1 select-none z-50">
@@ -106,6 +109,16 @@ export function Toolbar({
         >
           <Search className="w-4 h-4" />
         </button>
+
+        {isInstallable && (
+          <button
+            onClick={install}
+            className="btn-mac-ghost h-8 w-8 p-0 rounded-lg text-mac-blue"
+            title="安装应用到桌面"
+          >
+            <MonitorDown className="w-4 h-4" />
+          </button>
+        )}
 
         <button
           onClick={cycleTheme}

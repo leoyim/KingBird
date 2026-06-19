@@ -4,6 +4,8 @@ import { MAX_ARTICLES_PER_FETCH } from '@/utils/constants';
 import { articleIdFromLink } from '@/utils/articleId';
 import { sanitizeHTML } from '@/utils/htmlSanitizer';
 
+import { generateUUID } from '@/utils/uuid';
+
 // Multiple CORS proxies for fallback
 const CORS_PROXIES = [
   'https://api.allorigins.win/raw?url=',
@@ -12,7 +14,7 @@ const CORS_PROXIES = [
 ];
 
 function generateId(): string {
-  return crypto.randomUUID();
+  return generateUUID();
 }
 
 function extractImageFromContent(content: string): string | undefined {

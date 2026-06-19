@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Subscription, Feed, Folder, RefreshStatus } from '@/types';
 import { db } from '@/db/schema';
+import { generateUUID } from '@/utils/uuid';
 
 interface SubscriptionState {
   subscriptions: Subscription[];
@@ -55,7 +56,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   addSubscription: async (feed, folderId) => {
     await db.feeds.put(feed);
     const subscription: Subscription = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       feedId: feed.id,
       folderId,
       sortOrder: get().subscriptions.length,
@@ -78,7 +79,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
   addFolder: async (name, parentId) => {
     const folder: Folder = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name,
       parentId,
       sortOrder: get().folders.length,

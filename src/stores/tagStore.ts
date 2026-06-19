@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Tag, ArticleTag, SubscriptionTag } from '@/types';
 import { db } from '@/db/schema';
+import { generateUUID } from '@/utils/uuid';
 
 interface TagState {
   tags: Tag[];
@@ -48,7 +49,7 @@ export const useTagStore = create<TagState>((set, get) => ({
     if (existing) return;
 
     const tag: Tag = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name,
       color: color || '#007AFF',
       createdAt: Date.now(),

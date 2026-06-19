@@ -6,10 +6,47 @@
 
 > 极简、高性能的多平台 RSS 阅读器。Web + 桌面双端，数据本地存储，零云端依赖。
 
-![License](https://img.shields.io/badge/license-MIT-blue)
+![CI](https://github.com/leoyim/kingbird/actions/workflows/deploy.yml/badge.svg)
+![Stars](https://img.shields.io/github/stars/leoyim/kingbird?style=social)
 ![Stack](https://img.shields.io/badge/frontend-React%20%2B%20TypeScript%20%2B%20Vite-646cff)
 ![Desktop](https://img.shields.io/badge/desktop-Tauri%20v2-orange)
 ![PWA](https://img.shields.io/badge/PWA-ready-brightgreen)
+
+---
+
+## 技术亮点
+
+```mermaid
+graph TD
+    A[React 18 + TypeScript + Vite] --> B[Web 端]
+    A --> C[桌面端]
+    C --> D[Tauri v2 + Rust]
+    D --> E[Windows / macOS / Linux]
+    A --> F[PWA]
+    F --> G[iOS / Android 添加到主屏幕]
+    H[Zustand 状态管理] --> A
+    I[Dexie.js + IndexedDB] --> J[全量本地存储]
+    K[FlexSearch] --> L[毫秒级全文搜索]
+```
+
+### 为什么选择 Kingbird？
+
+| 技术决策 | 传统方案 | Kingbird 的选择 |
+|----------|----------|:-----------------|
+| **数据存储** | 依赖后端数据库 | **全量存于浏览器 IndexedDB**，零服务端依赖 |
+| **数据同步** | 需要账号 + OAuth | **无需登录**，所有数据完全离线可用 |
+| **跨平台** | Electron（~200MB） | **Tauri v2 + Rust**，安装包仅 ~5MB |
+| **网络带宽** | 每次拉取全文 | **ETag / 304** 条件请求，节省 ~99% 流量 |
+| **搜索** | 后端 Elastisearch | **FlexSearch 浏览器内建索引**，毫秒级响应 |
+| **代码渲染** | 原生 `<code>` | **Monaco Editor 风格**，VS Code 配色、真实行号 |
+| **XSS 防护** | 自行转义 | **DOMPurify** 强化清洗，CSP 头双重保障 |
+| **分发方式** | 仅网页 | **Web + PWA + 桌面三端一套代码** |
+
+- 🏠 **本地优先** — 所有订阅、文章、阅读记录存在 IndexedDB，关闭浏览器不会丢，随时可导出备份
+- 🌐 **离线可用** — Service Worker 缓存壳资源，无网络也能打开应用、阅读已缓存文章
+- ⚡ **极致轻量** — 主 Bundle ~218KB（gzip），首屏秒开
+- 📟 **墨水屏专为 Kindle 设计** — 暖黄纸张底色、衬线字体、零 CSS 动画
+- 🧠 **仿生阅读** — 单词首部加粗，引导眼睛快速扫读
 
 ---
 
@@ -138,7 +175,7 @@ bun tauri:build   # 构建安装包（.dmg / .msi / .AppImage）
 ### 搜索
 
 - 点击 🔍 或按 `/` 打开搜索面板
-- 输入关键词实时搜索所有文章
+- 输入关键词实时搜索所有文章标题和内容
 
 ### 数据备份
 
@@ -189,7 +226,7 @@ bun tauri:build
 
 ### PWA
 
-项目包含 `manifest.json` 和 Service Worker，部署后可通过浏览器"添加到主屏幕"作为独立应用使用。
+项目包含 `manifest.json` 和 Service Worker，部署后可通过浏览器"添加到主屏幕"作为独立应用使用。工具栏自动显示安装按钮。
 
 ---
 

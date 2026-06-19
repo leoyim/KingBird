@@ -4,6 +4,7 @@ import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useTagStore } from '@/stores/tagStore';
 import { fetchFeedMeta, detectFeedUrl } from '@/services/rssService';
 import { fetchArticles } from '@/services/rssService';
+import { generateUUID } from '@/utils/uuid';
 import type { Feed } from '@/types';
 
 interface AddFeedDialogProps {
@@ -73,7 +74,7 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
       const meta = await fetchFeedMeta(feedUrl);
       setFeedPreview(meta);
       const feed: Feed = {
-        id: meta.id || crypto.randomUUID(),
+        id: meta.id || generateUUID(),
         url: feedUrl,
         title: meta.title || feedUrl,
         description: meta.description || '',
