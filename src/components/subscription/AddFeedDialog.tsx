@@ -10,11 +10,12 @@ import type { Feed } from '@/types';
 interface AddFeedDialogProps {
   open: boolean;
   onClose: () => void;
+  onRefreshRequested?: () => void;
 }
 
 type Step = 'input' | 'detecting' | 'confirm' | 'loading' | 'success' | 'error';
 
-export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
+export function AddFeedDialog({ open, onClose, onRefreshRequested }: AddFeedDialogProps) {
   const [url, setUrl] = useState('');
   const [step, setStep] = useState<Step>('input');
   const [detectedFeeds, setDetectedFeeds] = useState<string[]>([]);
@@ -100,9 +101,6 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
       await fetchArticles(feedUrl, feed.id);
 
       setStep('success');
-      setTimeout(() => {
-        handleClose();
-      }, 1200);
     } catch (err) {
       setErrorMsg(`添加失败：${err instanceof Error ? err.message : '未知错误'}`);
       setStep('error');
@@ -228,12 +226,32 @@ export function AddFeedDialog({ open, onClose }: AddFeedDialogProps) {
 
           {/* Success */}
           {step === 'success' && feedPreview && (
-            <div className="flex flex-col items-center py-8">
+            <div className="flex flex-col items-center py-6">
               <CheckCircle2 className="w-8 h-8 text-mac-green mb-3" />
               <p className="text-sm font-medium">订阅成功</p>
               <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary mt-1">
                 {feedPreview.title}
               </p>
+              <p className="text-xs text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mt-4 mb-4">
+                是否立即刷新获取文章？
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    onRefreshRequested?.();
+                    handleClose();
+                  }}
+                  className="btn-mac-primary px-6 text-xs"
+                >
+                  立即刷新
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="btn-mac-ghost px-4 text-xs"
+                >
+                  稍后再说
+                </button>
+              </div>
             </div>
           )}
 

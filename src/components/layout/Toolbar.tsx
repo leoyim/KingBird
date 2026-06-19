@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Plus, RefreshCw, Search, Settings, Sun, Moon, Glasses,
-  PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown
+  PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown, Command, X
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
@@ -39,6 +39,19 @@ export function Toolbar({
   }, [theme, setTheme]);
 
   const { isInstallable, install } = usePWAInstall();
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const shortcuts = [
+    { key: 'J', desc: '下一篇' },
+    { key: 'K', desc: '上一篇' },
+    { key: 'S', desc: '切换收藏' },
+    { key: 'M', desc: '切换已读' },
+    { key: 'N', desc: '添加订阅' },
+    { key: 'R', desc: '刷新全部' },
+    { key: 'V', desc: '打开原文' },
+    { key: '/', desc: '搜索' },
+    { key: 'Esc', desc: '关闭' },
+  ];
 
   return (
     <header className="glass-toolbar h-11 flex items-center px-3 gap-1 select-none z-50">
@@ -64,6 +77,42 @@ export function Toolbar({
               {unreadCount}
             </span>
           )}
+          {/* Shortcuts button + dropdown */}
+          <span className="relative">
+            <button
+              onClick={() => setShowShortcuts(!showShortcuts)}
+              className="btn-mac-ghost h-6 w-6 p-0 rounded-md"
+              title="快捷键"
+            >
+              <Command className="w-3.5 h-3.5" />
+            </button>
+            {showShortcuts && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowShortcuts(false)} />
+                <div className="absolute top-8 left-0 z-50 card-mac w-48 overflow-hidden animate-scale-in shadow-xl">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-black/5 dark:border-white/5">
+                    <h2 className="text-[11px] font-semibold text-mac-text-secondary">键盘快捷键</h2>
+                    <button
+                      onClick={() => setShowShortcuts(false)}
+                      className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="px-3 py-1.5 space-y-0.5">
+                    {shortcuts.map(({ key, desc }) => (
+                      <div key={key} className="flex items-center justify-between text-[11px]">
+                        <span className="text-mac-text-secondary">{desc}</span>
+                        <kbd className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[10px] font-mono font-medium text-mac-text">
+                          {key}
+                        </kbd>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </span>
         </div>
       </div>
 

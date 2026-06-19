@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
-import { search } from '@/services/searchService';
-import { useArticleStore } from '@/stores/articleStore';
+import { search, getArticlesByIds } from '@/services/searchService';
+import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import type { Article } from '@/types';
 import { formatRelativeTime } from '@/utils/dateFormatter';
 
@@ -16,7 +16,9 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
   const [results, setResults] = useState<Article[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const articles = useArticleStore((s) => s.articles);
+  const feeds = useSubscriptionStore((s) => s.feeds);
+
+  const getFeedTitle = (feedId: string) => feeds.find((f) => f.id === feedId)?.title || '';
 
   useEffect(() => {
     if (open) {
@@ -32,16 +34,20 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
 
     setIsSearching(true);
     try {
+      // Search returns IDs from the full index (all articles in DB)
       const searchResults = await search(query);
-      const foundArticles = searchResults
-        .map((r) => articles.find((a) => a.id === r.articleId))
-        .filter(Boolean) as Article[];
+      // Fetch full Article records directly from DB (not the in-memory store
+      // which may only contain articles for the currently selected feed)
+      const foundArticles = await getArticlesByIds(searchResults.map(r => r.articleId));
+      // Sort by publishedAt desc
+      foundArticles.sort((a, b) => b.publishedAt - a.publishedAt);
       setResults(foundArticles);
-    } catch {
+    } catch (err) {
+      console.error('[Kingbird] Search panel error:', err);
       setResults([]);
     }
     setIsSearching(false);
-  }, [query, articles]);
+  }, [query]);
 
   useEffect(() => {
     const timer = setTimeout(handleSearch, 300);
@@ -56,8 +62,14 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
   if (!open) return null;
 
   return (
-    <div className="absolute inset-0 z-40 bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in">
-      <div className="max-w-2xl mx-auto px-6 pt-8">
+    <div
+      className="absolute inset-0 z-40 bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="max-w-3xl mx-auto px-6 pt-20"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Search input */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-mac-text-secondary" />
@@ -78,17 +90,23 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
             </button>
           )}
           {isSearching && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-mac-blue animate-spin" />
+            <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 w-4 h-4 text-mac-blue animate-spin" />
           )}
         </div>
 
         {/* Results */}
         {query && (
-          <div className="mt-4 space-y-1 max-h-[60vh] overflow-y-auto">
+          <div className="mt-4 space-y-1 max-h-[55vh] overflow-y-auto rounded-xl">
             {results.length === 0 && !isSearching && (
-              <div className="text-center py-12">
+              <div className="text-center py-16">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                  <Search className="w-5 h-5 text-mac-text-secondary/40" />
+                </div>
                 <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary">
                   未找到相关文章
+                </p>
+                <p className="text-xs text-mac-text-secondary/50 dark:text-mac-text-dark-secondary/50 mt-1">
+                  尝试其他关键词
                 </p>
               </div>
             )}
@@ -101,12 +119,13 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
                 <h4 className="text-sm font-medium text-mac-text dark:text-mac-text-dark mb-1">
                   {article.title}
                 </h4>
-                <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary line-clamp-2">
+                <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary line-clamp-2 mb-1.5">
                   {article.summary?.replace(/<[^>]*>/g, '').slice(0, 120)}
                 </p>
-                <span className="text-[10px] text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mt-1 inline-block">
-                  {formatRelativeTime(article.publishedAt)}
-                </span>
+                <div className="flex items-center gap-2 text-[10px] text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60">
+                  <span className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 font-medium">{getFeedTitle(article.feedId)}</span>
+                  <span>{formatRelativeTime(article.publishedAt)}</span>
+                </div>
               </button>
             ))}
           </div>
@@ -114,13 +133,22 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
 
         {/* Shortcuts hint */}
         {!query && (
-          <div className="text-center py-12">
-            <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary">
+          <div className="text-center py-20">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-black/5 dark:bg-white/5 flex items-center justify-center">
+              <Search className="w-7 h-7 text-mac-text-secondary/30" />
+            </div>
+            <p className="text-sm text-mac-text-secondary dark:text-mac-text-dark-secondary font-medium">
               输入关键词搜索文章
             </p>
-            <p className="text-xs text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 mt-2">
-              按 <kbd className="px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-[10px]">ESC</kbd> 关闭搜索
+            <p className="text-xs text-mac-text-secondary/50 dark:text-mac-text-dark-secondary/50 mt-2">
+              支持搜索文章标题和全文内容
             </p>
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <kbd className="px-2 py-1 rounded-md bg-black/5 dark:bg-white/5 text-[10px] text-mac-text-secondary/60 font-mono">ESC</kbd>
+              <span className="text-[10px] text-mac-text-secondary/50">关闭搜索</span>
+              <kbd className="px-2 py-1 rounded-md bg-black/5 dark:bg-white/5 text-[10px] text-mac-text-secondary/60 font-mono">↵</kbd>
+              <span className="text-[10px] text-mac-text-secondary/50">跳转首条</span>
+            </div>
           </div>
         )}
       </div>

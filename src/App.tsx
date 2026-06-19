@@ -59,7 +59,9 @@ function App() {
       await loadFilters();
 
       // Build search index
-      buildSearchIndex().catch(() => {});
+      buildSearchIndex().catch((err) => {
+        console.error('[Kingbird] Failed to build search index:', err);
+      });
 
       // Request notification permission
       if (preferences.notificationsEnabled) {
@@ -96,19 +98,14 @@ function App() {
     try {
       await refreshAllFeeds((feedId, status) => {
         subStore.setFeedRefreshStatus(feedId, status);
-
-        // Success auto-hides after 10 seconds
-        if (status === 'success') {
-          setTimeout(() => {
-            const current = useSubscriptionStore.getState().feedRefreshState[feedId];
-            if (current === 'success') {
-              useSubscriptionStore.getState().clearFeedRefreshStatus(feedId);
-            }
-          }, 10_000);
-        }
+        // Success checkmark persists until user clicks the feed
       }, { includeDisabled });
       await loadArticles(selectedFeedId || undefined);
       await loadSubscriptions();
+      // Rebuild search index with fresh articles
+      buildSearchIndex().catch((err) => {
+        console.error('[Kingbird] Failed to rebuild search index:', err);
+      });
       setLastUpdatedAt(Date.now());
     } catch (err) {
       console.error('Refresh failed:', err);
@@ -117,12 +114,17 @@ function App() {
   }, [selectedFeedId, loadArticles, loadSubscriptions, setLastUpdatedAt]);
 
   const handleSelectFeed = useCallback(async (feedId: string) => {
+    // Clear refresh success checkmark when user clicks the feed
+    useSubscriptionStore.getState().clearFeedRefreshStatus(feedId);
     await loadArticles(feedId);
   }, [loadArticles]);
 
   const handleSelectFolder = useCallback(async (folderId: string) => {
-    // Load articles for all feeds in folder
+    // Clear refresh statuses for all feeds in this folder
     const subs = useSubscriptionStore.getState().subscriptions.filter(s => s.folderId === folderId);
+    for (const sub of subs) {
+      useSubscriptionStore.getState().clearFeedRefreshStatus(sub.feedId);
+    }
     await loadArticles();
   }, [loadArticles]);
 
@@ -142,7 +144,7 @@ function App() {
         else useArticleStore.getState().markAsRead(selectedArticleId);
       }
     }, description: '切换已读' },
-    { key: 'r', handler: () => doRefresh(true), description: '刷新' },
+    { key: 'r', handler: () => doRefresh(false), description: '刷新' },
     { key: 'n', handler: () => setAddFeedOpen(true), description: '添加订阅' },
     { key: '/', handler: toggleSearchPanel, description: '搜索' },
     { key: 'v', handler: () => {
@@ -172,7 +174,7 @@ function App() {
   return (
     <AppLayout
       onAddFeed={() => setAddFeedOpen(true)}
-      onRefresh={() => doRefresh(true)}
+      onRefresh={() => doRefresh(false)}
       isRefreshing={isRefreshing}
       onSelectFeed={handleSelectFeed}
       onSelectFolder={handleSelectFolder}
@@ -193,6 +195,7 @@ function App() {
       <AddFeedDialog
         open={addFeedOpen}
         onClose={() => setAddFeedOpen(false)}
+        onRefreshRequested={() => doRefresh(true)}
       />
       <EditFeedDialog
         open={editFeedOpen}
@@ -202,6 +205,7 @@ function App() {
       <ImportOPMLDialog
         open={importOPMLOpen}
         onClose={() => setImportOPMLOpen(false)}
+        onRefreshRequested={() => doRefresh(true)}
       />
       <SearchPanel
         open={searchPanelOpen}

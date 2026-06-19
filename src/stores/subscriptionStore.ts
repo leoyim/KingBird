@@ -50,6 +50,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       db.feeds.toArray(),
       db.folders.orderBy('sortOrder').toArray(),
     ]);
+
+    // Ensure favicons are persisted for feeds missing faviconUrl
+    const feedsToUpdate = feeds.filter(f => !f.faviconUrl);
+    if (feedsToUpdate.length > 0) {
+      // Defer favicon resolution to avoid blocking UI
+      const { ensureFavicon } = await import('@/utils/favicon');
+      Promise.all(feedsToUpdate.map(f => ensureFavicon(f))).then(() => {
+        // Reload feeds silently to get updated faviconUrl
+        db.feeds.toArray().then(updatedFeeds => {
+          set({ feeds: updatedFeeds });
+        });
+      }).catch(() => {});
+    }
+
     set({ subscriptions, feeds, folders, isLoading: false });
   },
 

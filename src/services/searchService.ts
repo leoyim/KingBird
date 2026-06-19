@@ -1,5 +1,5 @@
 import FlexSearch from 'flexsearch';
-import type { SearchResult } from '@/types';
+import type { SearchResult, Article } from '@/types';
 import { db } from '@/db/schema';
 
 interface SearchDocument {
@@ -32,6 +32,8 @@ function getIndex(): any {
 }
 
 export async function buildSearchIndex(): Promise<void> {
+  // Reset index to avoid stale/duplicate entries
+  searchIndex = null;
   const index = getIndex();
   const articles = await db.articles.toArray();
 
@@ -44,6 +46,8 @@ export async function buildSearchIndex(): Promise<void> {
       feedId: article.feedId,
     });
   }
+
+  console.log(`[Kingbird] Search index rebuilt: ${articles.length} articles`);
 }
 
 export async function search(query: string, limit = 50): Promise<SearchResult[]> {
@@ -53,25 +57,38 @@ export async function search(query: string, limit = 50): Promise<SearchResult[]>
     return [];
   }
 
-  const results = await index.searchAsync(query, { limit });
+  const q = query.trim();
 
-  const searchResults: SearchResult[] = [];
-  const seen = new Set<string>();
+  // FlexSearch.Document.searchAsync returns [{ field, result: [...] }, ...]
+  // result items are ID strings (without enrich)
+  const raw = await index.searchAsync(q, { limit });
 
-  for (const result of results) {
-    for (const fieldResult of result.result) {
-      const id = String(fieldResult);
-      if (!seen.has(id)) {
-        seen.add(id);
-        searchResults.push({
-          articleId: id,
-          score: 1,
-        });
-      }
+  const ids = new Set<string>();
+  for (const fieldResult of raw) {
+    if (!fieldResult.result || !Array.isArray(fieldResult.result)) continue;
+    for (const item of fieldResult.result) {
+      const id = typeof item === 'string' || typeof item === 'number'
+        ? String(item)
+        : String(item?.id ?? '');
+      if (id) ids.add(id);
     }
   }
 
-  return searchResults.slice(0, limit);
+  return Array.from(ids).slice(0, limit).map(id => ({ articleId: id, score: 1 }));
+}
+
+/**
+ * Fetch full Article records for a list of article IDs from DB.
+ */
+export async function getArticlesByIds(ids: string[]): Promise<Article[]> {
+  if (ids.length === 0) return [];
+  const results: Article[] = [];
+  // Dexie bulkGet for performance
+  const found = await db.articles.bulkGet(ids);
+  for (const a of found) {
+    if (a) results.push(a);
+  }
+  return results;
 }
 
 export async function addToIndex(article: { id: string; title: string; content?: string }): Promise<void> {

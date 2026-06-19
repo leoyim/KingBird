@@ -4,7 +4,9 @@
   <img src="src-tauri/icons/icon.png" alt="Kingbird" width="128" />
 </p>
 
-> 极简、高性能的多平台 RSS 阅读器。Web + 桌面双端，数据本地存储，零云端依赖。
+> A minimalist, high-performance multi-platform RSS reader. Web + desktop, local storage, zero cloud dependency.
+
+[简体中文](./README.zh.md) | English
 
 ![CI](https://github.com/leoyim/kingbird/actions/workflows/deploy.yml/badge.svg)
 ![Stars](https://img.shields.io/github/stars/leoyim/kingbird?style=social)
@@ -14,222 +16,211 @@
 
 ---
 
-## 技术亮点
+## Origin of the Name
+
+**Kingbird** — inspired by the **Qingniao (青鸟)** from Chinese mythology.
+
+In legend, the Qingniao served as the messenger of the Queen Mother of the West, flying thousands of miles to deliver news between heaven and earth. "Qing" sounds like "King," and the Kingbird is also a real bird species (Tyrannus), agile and precise — just as an RSS reader flies across the internet to gather stories from everywhere.
+
+---
+
+## Technical Highlights
 
 ```mermaid
 graph TD
-    A[React 18 + TypeScript + Vite] --> B[Web 端]
-    A --> C[桌面端]
+    A[React 18 + TypeScript + Vite] --> B[Web]
+    A --> C[Desktop]
     C --> D[Tauri v2 + Rust]
     D --> E[Windows / macOS / Linux]
     A --> F[PWA]
-    F --> G[iOS / Android 添加到主屏幕]
-    H[Zustand 状态管理] --> A
-    I[Dexie.js + IndexedDB] --> J[全量本地存储]
-    K[FlexSearch] --> L[毫秒级全文搜索]
+    F --> G[iOS / Android Add to Home Screen]
+    H[Zustand State Management] --> A
+    I[Dexie.js + IndexedDB] --> J[Full Local Storage]
+    K[FlexSearch] --> L[Millisecond Full-text Search]
 ```
 
-### 为什么选择 Kingbird？
-
-| 技术决策 | 传统方案 | Kingbird 的选择 |
-|----------|----------|:-----------------|
-| **数据存储** | 依赖后端数据库 | **全量存于浏览器 IndexedDB**，零服务端依赖 |
-| **数据同步** | 需要账号 + OAuth | **无需登录**，所有数据完全离线可用 |
-| **跨平台** | Electron（~200MB） | **Tauri v2 + Rust**，安装包仅 ~5MB |
-| **网络带宽** | 每次拉取全文 | **ETag / 304** 条件请求，节省 ~99% 流量 |
-| **搜索** | 后端 Elastisearch | **FlexSearch 浏览器内建索引**，毫秒级响应 |
-| **代码渲染** | 原生 `<code>` | **Monaco Editor 风格**，VS Code 配色、真实行号 |
-| **XSS 防护** | 自行转义 | **DOMPurify** 强化清洗，CSP 头双重保障 |
-| **分发方式** | 仅网页 | **Web + PWA + 桌面三端一套代码** |
-
-- 🏠 **本地优先** — 所有订阅、文章、阅读记录存在 IndexedDB，关闭浏览器不会丢，随时可导出备份
-- 🌐 **离线可用** — Service Worker 缓存壳资源，无网络也能打开应用、阅读已缓存文章
-- ⚡ **极致轻量** — 主 Bundle ~218KB（gzip），首屏秒开
-- 📟 **墨水屏专为 Kindle 设计** — 暖黄纸张底色、衬线字体、零 CSS 动画
-- 🧠 **仿生阅读** — 单词首部加粗，引导眼睛快速扫读
+- 🏠 **Local-first** — All subscriptions, articles, and reading state stored in IndexedDB. Survives browser restarts, exportable anytime.
+- 🌐 **Offline-ready** — Service Worker caches app shell. Open and read cached articles without network.
+- ⚡ **Ultra-lightweight** — Main bundle ~218KB (gzip), instant first paint.
+- 📟 **E-ink mode for Kindle** — Warm paper background, serif fonts, zero CSS animations.
+- 🧠 **Bionic reading** — Bold word beginnings guide your eyes to read faster.
 
 ---
 
-## 名字由来
+## Features
 
-**Kingbird** — 取自中国神话中的**青鸟（Qingniao）**。
+### Subscription Management
+- 🔗 Manual URL input or smart RSS feed detection from website address
+- 📂 Dual organization with folders and tags
+- 🔧 Edit subscription title, URL, folder, and tags
+- ⏸️ Per-feed control over auto-refresh participation
+- ✅ Batch management: select all / toggle refresh for multiple feeds
+- 📥 OPML / JSON import and export
 
-青鸟是西王母的信使，振翅千里，为人间传递消息。Qing → King 同音，Kingbird 也是自然界真实存在的鸟类（王霸鹟），敏捷精准，恰如 RSS 阅读器替你飞越山海、收集四方见闻。
+### Article Reading
+- 📋 Three-column layout: sidebar → article list → reader view
+- 👁️ Unread / read tracking, one-click toggle
+- ⭐ Starred articles with dedicated filter
+- 🔍 Full-text keyword search (FlexSearch local index)
+- 🧠 **Bionic reading mode** — bold word beginnings for faster reading
 
----
+### Reading Experience
+- 🌓 Light / Dark / System theme
+- 👓 Eye-care mode (warm background)
+- 📟 **E-ink mode** — Kindle-style warm paper, serif fonts, zero animations
+- 🎨 Custom highlight color — traditional Chinese colors + modern palette + HEX input
+- 🔤 Dynamic font size scaling (12px — 24px)
+- 🖥️ Monaco Editor-style code blocks (VS Code Dark+ syntax colors + line numbers)
 
-## 特性
+### Refresh Mechanism
+- ⚡ HTTP conditional requests (ETag / If-Modified-Since), 304 saves ~99% bandwidth
+- 🔄 Per-feed refresh status (pending / success / failure)
+- 🔔 Browser push notifications
+- ⏱️ Configurable auto-refresh (manual / 15 / 30 / 60 / 180 minutes)
 
-### 订阅管理
-- 🔗 手动输入 URL 或网站地址智能检测 RSS 源
-- 📂 文件夹 / 标签双重组织订阅源
-- 🔧 编辑订阅标题、URL、文件夹、标签
-- ⏸️ 每源独立控制是否参与定时刷新
-- ✅ 批量管理：全选 / 一键开启或取消多个源的刷新
-- 📥 OPML / JSON 导入导出
-
-### 文章阅读
-- 📋 三栏布局：侧边栏 → 文章列表 → 阅读视图
-- 👁️ 未读 / 已读追踪，一键标记
-- ⭐ 文章收藏，独立收藏筛选
-- 🔍 全文关键词搜索（FlexSearch 本地索引）
-- 🧠 **仿生阅读模式** — 单词首部加粗，提升阅读速度
-
-### 阅读体验
-- 🌓 浅色 / 深色 / 跟随系统三种主题
-- 👓 护眼模式（暖色背景）
-- 📟 **墨水屏模式** — Kindle 风格，暖黄纸张、衬线字体、零动画
-- 🎨 高亮色自定义 — 传统中国色 + 现代流行色 + HEX 输入
-- 🔤 阅读字体大小动态缩放 (12px — 24px)
-- 🖥️ 代码块 Monaco Editor 风格（VS Code Dark+ 语法配色 + 行号）
-
-### 刷新机制
-- ⚡ HTTP 条件请求（ETag / If-Modified-Since），304 节省 ~99% 流量
-- 🔄 每源刷新状态实时显示（pending / success / failure）
-- 🔔 浏览器推送通知
-- ⏱️ 自动刷新可配置（手动 / 15 / 30 / 60 / 180 分钟）
-
-### 数据安全
-- 🔒 所有数据仅存于本地 IndexedDB
-- 🚫 零追踪、零分析
-- 💾 OPML / JSON 备份还原
+### Data Security
+- 🔒 All data stored locally in IndexedDB only
+- 🚫 Zero tracking, zero analytics
+- 💾 OPML / JSON backup and restore
 
 ---
 
-## 技术栈
+## Tech Stack
 
-| 类别 | 技术 |
-|------|------|
-| 前端 | React 18 + TypeScript + Vite |
-| 状态管理 | Zustand |
-| 本地存储 | Dexie.js (IndexedDB) |
-| 样式 | Tailwind CSS |
-| 图标 | Lucide React |
-| 搜索 | FlexSearch |
-| 代码高亮 | Prism.js |
-| XSS 防护 | DOMPurify |
-| 桌面端 | Tauri v2 + Rust |
+| Category | Technology |
+|----------|------------|
+| Frontend | React 18 + TypeScript + Vite |
+| State Management | Zustand |
+| Local Storage | Dexie.js (IndexedDB) |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Search | FlexSearch |
+| Code Highlighting | Prism.js |
+| XSS Protection | DOMPurify |
+| Desktop | Tauri v2 + Rust |
 
 ---
 
-## 快速开始
+## Getting Started
 
-### Web 端
+### Build Environment Setup
+
+Kingbird multi-platform build environment: install Node.js + bun first, then Rust (rustup default stable toolchain, target auto-matches host); Windows requires VS 2022 Build Tools with C++ workload, macOS requires Xcode Command Line Tools, Linux requires `build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev`. Once ready, `bun install` for dependencies, `bun run build` for Web build, `bun run tauri:build` for desktop installers (Windows→.msi / macOS→.dmg / Linux→.AppImage).
+
+### Web
 
 ```bash
-git clone <repo-url>
-cd kingbird
 bun install
-bun run dev      # 启动开发服务器 → http://localhost:5173
-bun run build    # 类型检查 + 生产打包 → dist/
+bun run dev      # Dev server → http://localhost:5173
+bun run build    # Type check + production build → dist/
 ```
 
-### 桌面端
+### Desktop
 
-**依赖**（仅 Linux 需要手动安装）：
+**Dependencies** (Linux only):
 
 ```bash
 sudo apt install -y build-essential libwebkit2gtk-4.1-dev \
   libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
 ```
 
-**安装 Rust**（如果尚未安装）：
+**Install Rust** (if not yet installed):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source "$HOME/.cargo/env"
 ```
 
-**启动**：
+**Run**:
 
 ```bash
-bun tauri:dev     # 桌面开发模式
-bun tauri:build   # 构建安装包（.dmg / .msi / .AppImage）
+bun tauri:dev     # Desktop dev mode
+bun tauri:build   # Build installers (.dmg / .msi / .AppImage)
 ```
 
 ---
 
-## 使用指南
+## Usage Guide
 
-### 添加订阅源
+### Add a Feed
 
-1. 点击工具栏 **+** 按钮（或按 `N`）
-2. 输入 RSS 链接或网站地址
-3. 可选择文件夹和标签
-4. 点击"添加"完成
+1. Click the **+** button in the toolbar (or press `N`)
+2. Enter an RSS link or website URL
+3. Optionally select a folder and tags
+4. Click "Add" to finish
 
-### 组织订阅源
+### Organize Feeds
 
-- **文件夹**：编辑订阅时可选择 / 新建文件夹，支持展开折叠
-- **标签**：右键订阅源 → "管理标签" → 添加 / 移除
-- **批量管理**：点击 "批量" → 勾选 → 一键开启 / 取消刷新
-- **每源定时刷新**：右键 → "取消刷新" 可将该源从自动刷新中排除
+- **Folders**: Select or create folders when editing a subscription; expand/collapse supported
+- **Tags**: Right-click a feed → "Manage Tags" → add / remove
+- **Batch management**: Click "Batch" → select → toggle refresh for all
+- **Per-feed auto-refresh**: Right-click → "Disable Refresh" to exclude from auto-refresh
 
-### 阅读文章
+### Read Articles
 
-- 点击文章进入阅读视图
-- 顶部工具栏切换 **原文 / 纯文本 / 仿生** 模式
-- `S` 收藏，`M` 切换已读，`J` / `K` 切换文章
-- 点击 ⚙️ 进入设置 → 开启护眼或墨水屏模式
+- Click an article to enter the reader view
+- Toggle **Original / Plain text / Bionic** modes via the top toolbar
+- `S` to star, `M` to toggle read, `J` / `K` to navigate articles
+- Click ⚙️ for settings → enable eye-care or e-ink mode
 
-### 搜索
+### Search
 
-- 点击 🔍 或按 `/` 打开搜索面板
-- 输入关键词实时搜索所有文章标题和内容
+- Click 🔍 or press `/` to open the search panel
+- Type keywords to search all article titles and content in real time
 
-### 数据备份
+### Data Backup
 
-打开设置 → 数据标签 → 导出 OPML / JSON
-
----
-
-## 键盘快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `J` | 下一篇 |
-| `K` | 上一篇 |
-| `S` | 切换收藏 |
-| `M` | 切换已读 |
-| `N` | 添加订阅 |
-| `R` | 刷新全部 |
-| `V` | 打开原文链接 |
-| `/` | 搜索 |
-| `Esc` | 关闭面板 / 关闭阅读 |
+Open Settings → Data tab → Export OPML / JSON
 
 ---
 
-## 部署
+## Keyboard Shortcuts
 
-### Web 端
+| Shortcut | Action |
+|----------|--------|
+| `J` | Next article |
+| `K` | Previous article |
+| `S` | Toggle star |
+| `M` | Toggle read |
+| `N` | Add subscription |
+| `R` | Refresh all |
+| `V` | Open original link |
+| `/` | Search |
+| `Esc` | Close panel / reader |
 
-`dist/` 目录为纯静态文件，可部署到任意静态托管服务。
+---
 
-常用平台：
-- **GitHub Pages** — 免费，支持自定义域名
-- **Vercel / Netlify** — 零配置拖拽部署
-- **Cloudflare Pages** — 全球 CDN
-- **Nginx / Caddy** — 自托管
+## Deployment
 
-> 示例：本项目的线上实例部署在 [GitHub Pages](https://github.com/leoyim/kingbird)，通过 CNAME 绑定自定义域名 `ezrss.leoyim.cn`，DNS CNAME 记录指向 `<username>.github.io`。
+### Web
 
-### 桌面端
+The `dist/` directory contains pure static files, deployable to any static hosting service.
+
+Common platforms:
+- **GitHub Pages** — Free, supports custom domains
+- **Vercel / Netlify** — Zero-config drag-and-drop deploy
+- **Cloudflare Pages** — Global CDN
+- **Nginx / Caddy** — Self-hosted
+
+> Example: This project's live instance is deployed on [GitHub Pages](https://github.com/leoyim/kingbird), with a custom domain `ezrss.leoyim.cn` bound via CNAME, DNS CNAME record pointing to `<username>.github.io`.
+
+### Desktop
 
 ```bash
 bun tauri:build
 ```
 
-产物：
+Output:
 - macOS → `src-tauri/target/release/bundle/dmg/`
 - Windows → `src-tauri/target/release/bundle/msi/`
 - Linux → `src-tauri/target/release/bundle/appimage/`
 
 ### PWA
 
-项目包含 `manifest.json` 和 Service Worker，部署后可通过浏览器"添加到主屏幕"作为独立应用使用。工具栏自动显示安装按钮。
+The project includes `manifest.json` and a Service Worker. After deployment, users can "Add to Home Screen" via browser to use it as a standalone app. The toolbar automatically shows an install button when available.
 
 ---
 
-## 许可
+## License
 
 MIT License

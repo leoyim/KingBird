@@ -5,6 +5,8 @@ export interface Feed {
   description?: string;
   link?: string;
   imageUrl?: string;
+  /** Website favicon URL, persisted for long-term use */
+  faviconUrl?: string;
   lastFetchedAt?: number;
   errorCount: number;
   isActive: boolean;
