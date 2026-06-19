@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Tag, ArticleTag, SubscriptionTag } from '@/types';
 import { db } from '@/db/schema';
 import { generateUUID } from '@/utils/uuid';
+import { getTagColor } from '@/utils/tagColors';
 
 interface TagState {
   tags: Tag[];
@@ -49,10 +50,11 @@ export const useTagStore = create<TagState>((set, get) => ({
     const existing = await db.tags.where('name').equals(name).first();
     if (existing) return;
 
+    const allTags = await db.tags.toArray();
     const tag: Tag = {
       id: generateUUID(),
       name,
-      color: color || '#007AFF',
+      color: color || getTagColor(allTags.length),
       createdAt: Date.now(),
     };
     await db.tags.put(tag);
