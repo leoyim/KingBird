@@ -24,6 +24,7 @@ function getIndex(): any {
         store: ['id', 'title', 'feedId'],
       },
       tokenize: 'forward',
+      encoder: 'CJK',
       context: true,
       cache: true,
     });

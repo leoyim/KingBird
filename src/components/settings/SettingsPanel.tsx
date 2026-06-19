@@ -1,4 +1,4 @@
-import { Moon, Monitor, Glasses, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Bell, Database } from 'lucide-react';
+import { Moon, Monitor, Download, Upload, Trash2, RefreshCw, Filter, X, Plus, CheckCircle2, Circle, MonitorOff, Bell, Database } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -64,7 +64,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
-  const { preferences, setTheme, setEyeCareMode, setEinkMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled, setHighlightColor } = useUIStore();
+  const { preferences, setTheme, setEinkMode, setReaderFontSize, setAutoRefreshInterval, setNotificationsEnabled, setHighlightColor } = useUIStore();
   const { loadAll } = useSubscriptionStore();
   const { rules, addRule, removeRule, toggleRule } = useFilterStore();
   const [activeTab, setActiveTab] = useState<TabId>('display');
@@ -81,7 +81,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-white/70 dark:bg-mac-bg-dark/70 backdrop-blur-xl animate-fade-in flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-lg card-mac overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 2rem)' }} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-black/5 dark:border-white/5 shrink-0">
@@ -136,13 +136,6 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               <div>
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 mb-2">阅读模式</h3>
                 <div className="space-y-3">
-                  <label className="flex items-center justify-between cursor-pointer py-1">
-                    <div className="flex items-center gap-2">
-                      <Glasses className="w-4 h-4 text-amber-600" />
-                      <span className="text-sm">护眼模式</span>
-                    </div>
-                    <Toggle enabled={preferences.eyeCareMode} onChange={() => setEyeCareMode(!preferences.eyeCareMode)} color="bg-amber-500" />
-                  </label>
                   <label className="flex items-center justify-between cursor-pointer py-1">
                     <div className="flex items-center gap-2">
                       <MonitorOff className="w-4 h-4 text-gray-600" />

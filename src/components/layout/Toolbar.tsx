@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  Plus, RefreshCw, Search, Settings, Moon, Glasses,
+  Plus, RefreshCw, Search, Settings, Moon, Sun, Monitor, PenTool,
   PanelLeftClose, PanelLeftOpen, FileUp, MonitorDown, Command, X
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
@@ -25,8 +25,9 @@ export function Toolbar({
   onImportOPML,
   isRefreshing,
 }: ToolbarProps) {
-  const { theme, eyeCareMode, setTheme } = useTheme();
-  const setEyeCareMode = useUIStore((s) => s.setEyeCareMode);
+  const { theme, setTheme } = useTheme();
+  const einkMode = useUIStore((s) => s.preferences.einkMode);
+  const setEinkMode = useUIStore((s) => s.setEinkMode);
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const searchPanelOpen = useUIStore((s) => s.searchPanelOpen);
@@ -34,8 +35,9 @@ export function Toolbar({
   const unreadCount = useUIStore((s) => s.unreadCount);
 
   const cycleTheme = useCallback(() => {
-    const next = theme === 'dark' ? 'system' : 'dark';
-    setTheme(next);
+    const order = ['dark', 'light', 'system'] as const;
+    const idx = order.indexOf(theme as typeof order[number]);
+    setTheme(order[(idx + 1) % order.length]);
   }, [theme, setTheme]);
 
   const { isInstallable, install } = usePWAInstall();
@@ -171,25 +173,25 @@ export function Toolbar({
         )}
 
         <button
-          onClick={cycleTheme}
-          className="btn-mac-ghost h-8 w-8 p-0 rounded-lg"
-          title="切换主题"
+          onClick={() => setEinkMode(!einkMode)}
+          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'bg-mac-blue/10 text-mac-blue' : ''}`}
+          title={einkMode ? '退出墨水屏模式' : '墨水屏模式'}
         >
-          {theme === 'dark' ? (
-            <Moon className="w-4 h-4" />
-          ) : (
-            <div className="w-4 h-4 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full border-2 border-current" />
-            </div>
-          )}
+          <PenTool className="w-4 h-4" />
         </button>
 
         <button
-          onClick={() => setEyeCareMode(!eyeCareMode)}
-          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${eyeCareMode ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : ''}`}
-          title="护眼模式"
+          onClick={einkMode ? undefined : cycleTheme}
+          className={`btn-mac-ghost h-8 w-8 p-0 rounded-lg ${einkMode ? 'opacity-30 cursor-not-allowed' : ''}`}
+          title={einkMode ? '墨水屏模式下锁定日间主题' : '切换主题'}
         >
-          <Glasses className="w-4 h-4" />
+          {theme === 'dark' ? (
+            <Moon className="w-4 h-4" />
+          ) : theme === 'light' ? (
+            <Sun className="w-4 h-4" />
+          ) : (
+            <Monitor className="w-4 h-4" />
+          )}
         </button>
 
         <button

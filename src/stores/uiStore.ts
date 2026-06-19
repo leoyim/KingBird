@@ -15,7 +15,6 @@ interface UIState {
   batchMode: boolean;
 
   setTheme: (theme: ThemeMode) => void;
-  setEyeCareMode: (enabled: boolean) => void;
   setEinkMode: (enabled: boolean) => void;
   setReaderFontSize: (size: number) => void;
   setReadingMode: (mode: ReadingMode) => void;
@@ -49,7 +48,6 @@ export const useUIStore = create<UIState>()(
       batchMode: false,
 
       setTheme: (theme) => set((s) => ({ preferences: { ...s.preferences, theme } })),
-      setEyeCareMode: (eyeCareMode) => set((s) => ({ preferences: { ...s.preferences, eyeCareMode } })),
       setEinkMode: (einkMode) => set((s) => ({ preferences: { ...s.preferences, einkMode } })),
       setReaderFontSize: (readerFontSize) => set((s) => ({ preferences: { ...s.preferences, readerFontSize } })),
       setReadingMode: (defaultReadingMode) => set((s) => ({ preferences: { ...s.preferences, defaultReadingMode } })),

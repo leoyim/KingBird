@@ -612,9 +612,24 @@ function FeedSidebarItem({
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [showDeleteFeedConfirm, setShowDeleteFeedConfirm] = useState(false);
+  const [contextMenuAbove, setContextMenuAbove] = useState(false);
   const availableTags = allTags.filter(t => !subTags.some(st => st.id === t.id));
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedItemRef = useRef<HTMLDivElement>(null);
+
+  // Reset delete confirm when menu closes
+  useEffect(() => {
+    if (!showContextMenu) setShowDeleteFeedConfirm(false);
+  }, [showContextMenu]);
+
+  // Determine if context menu should appear above or below
+  useEffect(() => {
+    if (!showContextMenu || !feedItemRef.current) return;
+    const rect = feedItemRef.current.getBoundingClientRect();
+    const menuHeight = 200;
+    setContextMenuAbove(rect.bottom + menuHeight > window.innerHeight);
+  }, [showContextMenu]);
 
   // Reset delete confirm when menu closes
   useEffect(() => {
@@ -682,7 +697,7 @@ function FeedSidebarItem({
   const isRefreshSuccess = refreshStatus === 'success';
 
   return (
-    <div className="relative">
+    <div className="relative" ref={feedItemRef}>
       <div
         className={`group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-all duration-200 border-b border-black/[0.06] dark:border-white/[0.06] border-l-[5px] ${
           isSelected || isBatchSelected
@@ -776,7 +791,7 @@ function FeedSidebarItem({
 
       {/* Context menu — absolute positioned, floats over content */}
       {showContextMenu && subId && (
-        <div ref={contextMenuRef} className="absolute left-4 right-2 top-full mt-1 py-1 rounded-lg bg-white dark:bg-mac-card-dark border border-black/10 dark:border-white/10 shadow-xl z-50" onClick={(e) => e.stopPropagation()}>
+        <div ref={contextMenuRef} className={`absolute left-4 right-2 ${contextMenuAbove ? 'bottom-full mb-1' : 'top-full mt-1'} py-1 rounded-lg bg-white dark:bg-mac-card-dark border border-black/10 dark:border-white/10 shadow-xl z-50`} onClick={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -851,7 +866,7 @@ function FeedSidebarItem({
 
       {/* Tag editor panel — absolute positioned */}
       {showTagEditor && subId && (
-        <div ref={contextMenuRef} className="absolute left-4 right-2 top-full mt-1 p-2 rounded-lg bg-white dark:bg-mac-card-dark border border-black/10 dark:border-white/10 shadow-xl z-50" onClick={(e) => e.stopPropagation()}>
+        <div ref={contextMenuRef} className={`absolute left-4 right-2 ${contextMenuAbove ? 'bottom-full mb-1' : 'top-full mt-1'} p-2 rounded-lg bg-white dark:bg-mac-card-dark border border-black/10 dark:border-white/10 shadow-xl z-50`} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold text-mac-text-secondary/70">管理标签</span>
             <button

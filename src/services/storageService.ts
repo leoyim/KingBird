@@ -105,7 +105,9 @@ export async function saveSubscription(sub: Subscription): Promise<void> {
 
 // Tag operations
 export async function getAllTags(): Promise<Tag[]> {
-  return db.tags.orderBy('createdAt').toArray();
+  const tags = await db.tags.toArray();
+  tags.sort((a, b) => a.createdAt - b.createdAt);
+  return tags;
 }
 
 export async function saveTag(tag: Tag): Promise<void> {

@@ -67,7 +67,7 @@ export function LazyImage({ src, alt = '', className = '' }: LazyImageProps) {
       {/* Zoom overlay */}
       {isZoomed && (
         <div
-          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center cursor-zoom-out"
+          className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xl flex items-center justify-center cursor-zoom-out"
           onClick={handleClick}
         >
           <img

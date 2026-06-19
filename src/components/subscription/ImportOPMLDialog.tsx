@@ -61,7 +61,7 @@ export function ImportOPMLDialog({ open, onClose, onRefreshRequested }: ImportOP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/70 backdrop-blur-xl animate-fade-in"
         onClick={handleClose}
       />
       <div className="relative card-mac w-full max-w-md mx-4 animate-scale-in overflow-hidden">

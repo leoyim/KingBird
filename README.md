@@ -166,7 +166,10 @@ bun tauri:build   # Build installers (.dmg / .msi / .AppImage)
 ### Search
 
 - Click 🔍 or press `/` to open the search panel
-- Type keywords to search all article titles and content in real time
+- Full-text search across all article titles and content (FlexSearch local index)
+- Full CJK (Chinese, Japanese, Korean) support with character-level indexing
+- Matching keywords highlighted in search results
+- Click a result to navigate directly to the feed and open the article
 
 ### Data Backup
 

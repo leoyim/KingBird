@@ -36,10 +36,11 @@ export const useTagStore = create<TagState>((set, get) => ({
   loadAll: async () => {
     set({ isLoading: true });
     const [tags, articleTags, subscriptionTags] = await Promise.all([
-      db.tags.orderBy('createdAt').toArray(),
+      db.tags.toArray(),
       db.articleTags.toArray(),
       db.subscriptionTags.toArray(),
     ]);
+    tags.sort((a, b) => a.createdAt - b.createdAt);
     set({ tags, articleTags, subscriptionTags, isLoading: false });
   },
 

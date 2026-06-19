@@ -4,44 +4,38 @@ import { useUIStore } from '@/stores/uiStore';
 
 export function useTheme() {
   const theme = useUIStore((s) => s.preferences.theme);
-  const eyeCareMode = useUIStore((s) => s.preferences.eyeCareMode);
   const einkMode = useUIStore((s) => s.preferences.einkMode);
   const setTheme = useUIStore((s) => s.setTheme);
 
   useEffect(() => {
     const root = document.documentElement;
 
-    const applyTheme = (mode: ThemeMode) => {
-      if (mode === 'dark') {
+    if (einkMode) {
+      root.classList.remove('dark');
+    } else {
+      if (theme === 'dark') {
         root.classList.add('dark');
-      } else if (mode === 'light') {
+      } else if (theme === 'light') {
         root.classList.remove('dark');
       } else {
-        // System
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         root.classList.toggle('dark', prefersDark);
       }
-    };
+    }
 
-    applyTheme(theme);
+    root.classList.toggle('eink', einkMode);
 
-    if (theme === 'system') {
+    if (theme === 'system' && !einkMode) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = () => applyTheme('system');
+      const handler = () => {
+        if (!useUIStore.getState().preferences.einkMode) {
+          root.classList.toggle('dark', mediaQuery.matches);
+        }
+      };
       mediaQuery.addEventListener('change', handler);
       return () => mediaQuery.removeEventListener('change', handler);
     }
-  }, [theme]);
+  }, [theme, einkMode]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('eye-care', eyeCareMode);
-  }, [eyeCareMode]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('eink', einkMode);
-  }, [einkMode]);
-
-  return { theme, eyeCareMode, einkMode, setTheme, isDark: document.documentElement.classList.contains('dark') };
+  return { theme, einkMode, setTheme, isDark: document.documentElement.classList.contains('dark') };
 }

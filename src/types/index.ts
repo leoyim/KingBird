@@ -78,7 +78,6 @@ export type RefreshStatus = 'pending' | 'success' | 'failure';
 export interface UserPreferences {
   id: string;
   theme: ThemeMode;
-  eyeCareMode: boolean;
   einkMode: boolean;
   readerFontSize: number;
   defaultReadingMode: ReadingMode;
@@ -102,7 +101,6 @@ export interface FilterRule {
 export const DEFAULT_PREFERENCES: UserPreferences = {
   id: 'default',
   theme: 'system',
-  eyeCareMode: false,
   einkMode: false,
   readerFontSize: 16,
   defaultReadingMode: 'original',

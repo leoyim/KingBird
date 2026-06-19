@@ -135,6 +135,13 @@ function App() {
     setSelectedArticleId(articleId);
   }, [setSelectedArticleId]);
 
+  const handleNavigateToFeed = useCallback(async (feedId: string) => {
+    const subStore = useSubscriptionStore.getState();
+    subStore.setSelectedFeedId(feedId);
+    subStore.clearFeedRefreshStatus(feedId);
+    await loadArticles(feedId);
+  }, [loadArticles]);
+
   // Keyboard shortcuts
   useKeyboardShortcuts([
     { key: 'j', handler: () => navigateArticle('next'), description: '下一篇文章' },
@@ -216,6 +223,7 @@ function App() {
         open={searchPanelOpen}
         onClose={toggleSearchPanel}
         onSelectArticle={handleSelectArticle}
+        onNavigateToFeed={handleNavigateToFeed}
       />
       <SettingsPanel
         open={settingsPanelOpen}

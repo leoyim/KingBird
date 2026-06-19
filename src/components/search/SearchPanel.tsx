@@ -9,9 +9,10 @@ interface SearchPanelProps {
   open: boolean;
   onClose: () => void;
   onSelectArticle: (articleId: string) => void;
+  onNavigateToFeed?: (feedId: string) => void;
 }
 
-export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps) {
+export function SearchPanel({ open, onClose, onSelectArticle, onNavigateToFeed }: SearchPanelProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Article[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -54,16 +55,30 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
     return () => clearTimeout(timer);
   }, [query, handleSearch]);
 
-  const handleSelect = (articleId: string) => {
-    onSelectArticle(articleId);
+  const handleSelect = (article: Article) => {
+    onSelectArticle(article.id);
+    onNavigateToFeed?.(article.feedId);
     onClose();
   };
+
+  const highlightText = useCallback((text: string) => {
+    if (!query.trim() || !text) return text;
+    const words = query.trim().split(/\s+/)
+      .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const pattern = new RegExp(`(${words.join('|')})`, 'gi');
+    const parts = text.split(pattern);
+    return parts.map((part, i) =>
+      i % 2 === 1
+        ? <span key={i} className="bg-yellow-200 dark:bg-yellow-600/50 text-inherit rounded px-0.5">{part}</span>
+        : part
+    );
+  }, [query]);
 
   if (!open) return null;
 
   return (
     <div
-      className="absolute inset-0 z-40 bg-white/80 dark:bg-mac-bg-dark/80 backdrop-blur-xl animate-fade-in"
+      className="absolute inset-0 z-40 bg-white/70 dark:bg-mac-bg-dark/70 backdrop-blur-xl animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -113,14 +128,14 @@ export function SearchPanel({ open, onClose, onSelectArticle }: SearchPanelProps
             {results.map((article) => (
               <button
                 key={article.id}
-                onClick={() => handleSelect(article.id)}
+                onClick={() => handleSelect(article)}
                 className="w-full text-left px-4 py-3 rounded-xl hover:bg-black/3 dark:hover:bg-white/3 transition-colors"
               >
                 <h4 className="text-sm font-medium text-mac-text dark:text-mac-text-dark mb-1">
-                  {article.title}
+                  {highlightText(article.title)}
                 </h4>
                 <p className="text-xs text-mac-text-secondary dark:text-mac-text-dark-secondary line-clamp-2 mb-1.5">
-                  {article.summary?.replace(/<[^>]*>/g, '').slice(0, 120)}
+                  {highlightText(article.summary?.replace(/<[^>]*>/g, '').slice(0, 120) || '')}
                 </p>
                 <div className="flex items-center gap-2 text-[10px] text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60">
                   <span className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 font-medium" title={getFeedTitle(article.feedId)}>{getFeedTitle(article.feedId)}</span>
