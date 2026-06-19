@@ -43,8 +43,11 @@ function App() {
   const { loadAll: loadFilters } = useFilterStore();
   const searchPanelOpen = useUIStore((s) => s.searchPanelOpen);
   const settingsPanelOpen = useUIStore((s) => s.settingsPanelOpen);
+  const batchMode = useUIStore((s) => s.batchMode);
+  const setBatchMode = useUIStore((s) => s.setBatchMode);
   const toggleSearchPanel = useUIStore((s) => s.toggleSearchPanel);
   const toggleSettingsPanel = useUIStore((s) => s.toggleSettingsPanel);
+  const toggleBatchMode = useUIStore((s) => s.toggleBatchMode);
   const setLastUpdatedAt = useUIStore((s) => s.setLastUpdatedAt);
   const setUnreadCount = useUIStore((s) => s.setUnreadCount);
   const preferences = useUIStore((s) => s.preferences);
@@ -147,6 +150,7 @@ function App() {
     { key: 'r', handler: () => doRefresh(false), description: '刷新' },
     { key: 'n', handler: () => setAddFeedOpen(true), description: '添加订阅' },
     { key: '/', handler: toggleSearchPanel, description: '搜索' },
+    { key: 'b', handler: toggleBatchMode, description: '批量选源' },
     { key: 'v', handler: () => {
       if (selectedArticleId) {
         const article = useArticleStore.getState().articles.find(a => a.id === selectedArticleId);
@@ -154,8 +158,9 @@ function App() {
       }
     }, description: '打开原文' },
     { key: 'escape', handler: () => {
-      if (searchPanelOpen) toggleSearchPanel();
-      else if (settingsPanelOpen) toggleSettingsPanel();
+      if (searchPanelOpen) { toggleSearchPanel(); }
+      else if (settingsPanelOpen) { toggleSettingsPanel(); }
+      else if (batchMode) { setBatchMode(false); }
       else setSelectedArticleId(null);
     }, description: '关闭面板' },
   ]);

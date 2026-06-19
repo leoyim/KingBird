@@ -50,6 +50,7 @@ export function Toolbar({
     { key: 'R', desc: '刷新全部' },
     { key: 'V', desc: '打开原文' },
     { key: '/', desc: '搜索' },
+    { key: 'B', desc: '批量选源' },
     { key: 'Esc', desc: '关闭' },
   ];
 

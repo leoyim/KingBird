@@ -12,6 +12,7 @@ interface UIState {
   lastUpdatedAt: number | null;
   unreadCount: number;
   starredFilter: boolean;
+  batchMode: boolean;
 
   setTheme: (theme: ThemeMode) => void;
   setEyeCareMode: (enabled: boolean) => void;
@@ -30,6 +31,8 @@ interface UIState {
   setLastUpdatedAt: (timestamp: number) => void;
   setUnreadCount: (count: number) => void;
   setStarredFilter: (value: boolean) => void;
+  setBatchMode: (value: boolean) => void;
+  toggleBatchMode: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -43,6 +46,7 @@ export const useUIStore = create<UIState>()(
       lastUpdatedAt: null,
       unreadCount: 0,
       starredFilter: false,
+      batchMode: false,
 
       setTheme: (theme) => set((s) => ({ preferences: { ...s.preferences, theme } })),
       setEyeCareMode: (eyeCareMode) => set((s) => ({ preferences: { ...s.preferences, eyeCareMode } })),
@@ -62,6 +66,8 @@ export const useUIStore = create<UIState>()(
       setLastUpdatedAt: (lastUpdatedAt) => set({ lastUpdatedAt }),
       setUnreadCount: (unreadCount) => set({ unreadCount }),
       setStarredFilter: (starredFilter) => set({ starredFilter }),
+      setBatchMode: (batchMode) => set({ batchMode }),
+      toggleBatchMode: () => set((s) => ({ batchMode: !s.batchMode })),
     }),
     {
       name: 'kingbird-ui-store',

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   ChevronDown, ChevronRight, FolderOpen, Inbox,
-  Rss, Star, Tags, MoreHorizontal, X, Plus, SquarePen, Trash2, Clock, CheckSquare, RotateCcw, RotateCw, Tag, RefreshCcw
+  Rss, Star, Tags, MoreHorizontal, X, Plus, SquarePen, Trash2, Clock, RotateCcw, RotateCw, Tag, RefreshCcw
 } from 'lucide-react';
 import { useSubscriptionStore } from '@/stores/subscriptionStore';
 import { useArticleStore } from '@/stores/articleStore';
@@ -23,15 +23,30 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
   const { tags, subscriptionTags, getTagsForSubscription, getSubscriptionsForTag, addTagToSubscription, removeTagFromSubscription, addTag } = useTagStore();
   const starredFilter = useUIStore((s) => s.starredFilter);
   const setStarredFilter = useUIStore((s) => s.setStarredFilter);
+  const batchMode = useUIStore((s) => s.batchMode);
+  const setBatchMode = useUIStore((s) => s.setBatchMode);
 
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [tagEditorSubId, setTagEditorSubId] = useState<string | null>(null);
   const [contextMenuSubId, setContextMenuSubId] = useState<string | null>(null);
-  const [batchMode, setBatchMode] = useState(false);
   const [batchSelectedIds, setBatchSelectedIds] = useState<Set<string>>(new Set());
   const [lastClickedSubId, setLastClickedSubId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  // Exit batch mode when clicking outside the sidebar
+  useEffect(() => {
+    if (!batchMode) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setBatchMode(false);
+        setBatchSelectedIds(new Set());
+      }
+    };
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, [batchMode, setBatchMode]);
 
   const toggleAutoRefresh = useSubscriptionStore((s) => s.toggleAutoRefresh);
   const removeSubscription = useSubscriptionStore((s) => s.removeSubscription);
@@ -167,7 +182,7 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
   };
 
   return (
-    <aside className="w-[260px] min-w-[260px] h-full glass-sidebar flex flex-col overflow-hidden">
+    <aside ref={sidebarRef} className="w-[260px] min-w-[260px] h-full glass-sidebar flex flex-col overflow-hidden">
       {/* Smart filters */}
       <div className="px-2 pt-3 pb-1">
         <div className="text-[10px] font-semibold uppercase tracking-wider text-mac-text-secondary/60 dark:text-mac-text-dark-secondary/60 px-2 mb-1">
@@ -298,20 +313,6 @@ export function Sidebar({ onSelectFeed, onSelectFolder, onEditFeed }: SidebarPro
             );
           })()}
         </div>
-        <button
-          onClick={() => {
-            setBatchMode(!batchMode);
-            setBatchSelectedIds(new Set());
-          }}
-          className={`text-[10px] font-medium px-2 py-0.5 rounded transition-colors ${
-            batchMode
-              ? 'bg-mac-blue/10 text-mac-blue'
-              : 'text-mac-text-secondary/50 hover:text-mac-text-secondary hover:bg-black/5 dark:hover:bg-white/5'
-          }`}
-        >
-          <CheckSquare className="w-3 h-3 inline mr-0.5" />
-          {batchMode ? '退出' : '批量'}
-        </button>
       </div>
 
       {/* Subscriptions list — scrollable */}
@@ -683,7 +684,7 @@ function FeedSidebarItem({
   return (
     <div className="relative">
       <div
-        className={`group flex items-center gap-2 px-3 py-2.5 cursor-pointer transition-all duration-200 border-b border-black/[0.06] dark:border-white/[0.06] border-l-[5px] ${
+        className={`group flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-all duration-200 border-b border-black/[0.06] dark:border-white/[0.06] border-l-[5px] ${
           isSelected || isBatchSelected
             ? 'bg-mac-blue/[0.07] text-mac-blue border-l-mac-blue'
             : `${isEven ? 'bg-black/[0.02] dark:bg-white/[0.02]' : 'bg-transparent'} border-l-black/[0.08] dark:border-l-white/[0.06] hover:border-l-black/[0.12] dark:hover:border-l-white/[0.1]`
