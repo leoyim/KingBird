@@ -194,6 +194,7 @@ Open Settings → Data tab → Export OPML / JSON
 | `M` | Toggle read |
 | `N` | Add subscription |
 | `R` | Refresh all |
+| `B` | Batch mode |
 | `V` | Open original link |
 | `/` | Search |
 | `Esc` | Close panel / reader |
